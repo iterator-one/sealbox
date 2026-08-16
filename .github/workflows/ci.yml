@@ -1,0 +1,55 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # the tests use a real gpg: some of them create a throwaway keyring and
+      # encrypt files with it to prove interoperability
+      - name: Install GnuPG
+        run: sudo apt-get update && sudo apt-get install -y gnupg
+
+      - run: npm install
+      - run: npm test
+
+      # Electron's Chromium sandbox uses a setuid helper binary. npm unpacks it
+      # as an ordinary user, so the bit has to be restored or Electron refuses
+      # to start. Doing this instead of passing --no-sandbox keeps the smoke
+      # test running the app the way a user runs it.
+      - name: Restore the permissions of Electron's sandbox helper
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+
+      # Boot the real app in Electron. A unit test cannot see a renderer that
+      # fails to parse — this step exists because exactly that shipped once.
+      - name: Smoke test the packaged UI
+        run: xvfb-run -a npm run smoke
+        timeout-minutes: 5
+
+      - name: Check for network calls in first-party code
+        run: |
+          if grep -rnE "https?://|fetch\(|require\('(net|dns|https?)'\)" src/ main.js preload.js; then
+            echo "Network access found — this breaks the guarantee stated in SECURITY.md"
+            exit 1
+          fi
+          echo "No network calls"
+
+      - name: Check for shell string interpolation
+        run: |
+          if grep -rnE "exec\(|execSync|shell: *true" src/ main.js preload.js; then
+            echo "Shell invocation found — use execFile with an argument array instead"
+            exit 1
+          fi
+          echo "No shell invocations"

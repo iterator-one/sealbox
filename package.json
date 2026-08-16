@@ -1,0 +1,66 @@
+{
+  "name": "sealbox",
+  "productName": "Sealbox",
+  "version": "1.0.2",
+  "description": "A free Mac app that encrypts any file before you send it. The key lives on a Ledger and cannot be copied off it. Open source.",
+  "main": "main.js",
+  "license": "MIT",
+  "author": "Boris Zozulya",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --mac --universal --publish never",
+    "preview": "node tools/build-preview.js",
+    "vendor": "bash tools/vendor-gpg.sh",
+    "smoke": "electron test/smoke-electron.js"
+  },
+  "dependencies": {
+    "openpgp": "^6.3.1"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "org.sealbox.app",
+    "productName": "Sealbox",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*"
+    ],
+    "artifactName": "Sealbox.${ext}",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "vendor/gnupg",
+        "to": "gnupg"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iterator-one/sealbox.git"
+  },
+  "keywords": [
+    "encryption",
+    "openpgp",
+    "gnupg",
+    "ledger",
+    "smartcard",
+    "hardware-wallet",
+    "macos",
+    "electron"
+  ]
+}
