@@ -1,0 +1,2 @@
+Kept so that electron-builder always finds this path.
+Run `npm run vendor` on macOS to fill it with GnuPG.

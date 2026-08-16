@@ -1,0 +1,11 @@
+node_modules/
+dist/
+vendor/*
+!vendor/gnupg/
+vendor/gnupg/*
+!vendor/gnupg/.keep
+.DS_Store
+*.log
+*.gpg
+*.asc
+package-lock.json

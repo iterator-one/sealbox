@@ -1,0 +1,119 @@
+name: release
+
+# Builds the macOS .dmg and attaches it to a GitHub Release.
+#
+# A .dmg can only be produced on macOS — `hdiutil` and the code-signing tools
+# are macOS-only, so this cannot be cross-built from Linux. GitHub's macOS
+# runners do it for free on public repositories.
+#
+# How to cut a release:
+#
+#   git tag v1.0.2
+#   git push origin v1.0.2
+#
+# A few minutes later the .dmg is attached to the Release page and anyone can
+# download it.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install
+
+      # never ship a build whose tests did not pass
+      # already present on the runner image most of the time; never fail the release over it
+      - run: brew install gnupg || true
+      - run: npm test
+      - run: npm run smoke
+        timeout-minutes: 5
+
+      # Releases deliberately ship WITHOUT a bundled GnuPG:
+      #
+      #   * tools/vendor-gpg.sh rewrites load paths inside the copied binaries,
+      #     which invalidates their signatures — on Apple Silicon an unsigned
+      #     binary will not run at all;
+      #   * Homebrew's GnuPG is built for one architecture, so it would not
+      #     match a universal app;
+      #   * bundling GnuPG brings GPLv3 obligations (LICENSES-THIRD-PARTY.md).
+      #
+      # The app installs GnuPG itself on the first setup screen instead.
+      # To bundle it anyway, uncomment the step below and test the result on
+      # both architectures.
+      #
+      # - name: Vendor GnuPG into the app
+      #   run: npm run vendor
+
+      # `npm run dist` passes --publish never. Without it electron-builder sees
+      # that the build was started from a tag, decides to upload the image to
+      # GitHub by itself, finds no GH_TOKEN and fails — after the image has
+      # already been built. Uploading is the job of the step below, which uses
+      # the token the workflow already has.
+      - name: Build the universal .dmg
+        run: npm run dist
+        env:
+          # No Developer ID certificate in CI, so the build is unsigned and
+          # macOS will warn on first launch. Signing and notarisation need a
+          # paid Apple account; see INSTALL.md.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Checksums
+        run: |
+          cd dist
+          shasum -a 256 Sealbox.dmg > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sealbox-macos
+          path: |
+            dist/*.dmg
+            dist/SHA256SUMS.txt
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          # make_latest keeps
+          # /releases/latest/download/Sealbox.dmg pointing at this build —
+          # that is the link the README download button uses.
+          make_latest: true
+          name: Sealbox ${{ github.ref_name }}
+          files: |
+            dist/Sealbox.dmg
+            dist/SHA256SUMS.txt
+          body: |
+            A free Mac app that encrypts any file before you send it.
+
+            Download the `.dmg`, open it, drag Sealbox into Applications.
+
+            This build is **not signed with an Apple Developer ID**, so macOS
+            refuses to open it the first time. One-time step:
+
+            * macOS 15 (Sequoia) and newer — try to open it once, dismiss the
+              warning, then System Settings → Privacy & Security → Security →
+              **Open Anyway**.
+            * macOS 14 and older — right-click the app → Open → Open.
+
+            Full instructions: [INSTALL.md](INSTALL.md)
+
+            Check the download against `SHA256SUMS.txt`:
+
+                shasum -a 256 Sealbox-*.dmg
+
+            Read [SECURITY.md](SECURITY.md) before trusting anything you cannot
+            afford to lose to this release.

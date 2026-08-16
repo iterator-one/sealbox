@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;" />
+  <title>Sealbox</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="header">
+  <div class="header-side left">
+    <button class="circle-btn" id="btn-header-back" hidden aria-label="Back">‹</button>
+  </div>
+  <div class="header-title" id="header-title">Sealbox</div>
+  <div class="header-side right">
+    <span class="version-badge" id="version-badge">v1.0.2</span>
+    <button class="circle-btn" id="btn-help" aria-label="Setup guide">?</button>
+  </div>
+</header>
+
+<main class="stage">
+
+  <!-- ════════════ Setup guide ════════════ -->
+  <section class="screen" id="screen-guide">
+    <div class="content">
+      <div class="progress" id="guide-dots"></div>
+
+      <div class="hero-text">
+        <div class="title" id="guide-title"></div>
+        <div class="subtitle" id="guide-lead"></div>
+      </div>
+
+      <div class="steps" id="guide-steps"></div>
+
+      <button class="btn primary" id="btn-guide-action" hidden></button>
+      <pre class="log" id="guide-log" hidden></pre>
+
+      <div class="status-row" id="guide-check" hidden>
+        <span class="status-dot"></span>
+        <span class="status-text" id="guide-check-text"></span>
+      </div>
+
+      <button class="linklike" id="btn-guide-fix" hidden></button>
+      <p class="caption" id="guide-note" hidden></p>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-guide-next">Next</button>
+      <button class="btn quiet" id="btn-guide-back">Back</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Main screen ════════════ -->
+  <section class="screen" id="screen-drop">
+    <div class="content">
+      <div class="dropzone" id="dropzone">
+        <div class="lock">
+          <svg viewBox="0 0 64 74" class="lock-svg" aria-hidden="true">
+            <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
+            <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
+            <circle class="pin" cx="32" cy="47" r="4.2" />
+            <path class="stem" d="M32 51.5v6" />
+          </svg>
+        </div>
+        <div class="hero-text center">
+          <div class="title">Drop a file here</div>
+          <div class="subtitle">It becomes readable only to you</div>
+        </div>
+      </div>
+
+      <div class="status-row clickable" id="statusline">
+        <span class="status-dot"></span>
+        <span class="status-text"></span>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-pick">Choose a file</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Create a key ════════════ -->
+  <section class="screen" id="screen-newkey">
+    <div class="content">
+      <div class="hero-text">
+        <div class="title">Let's create your key</div>
+        <div class="subtitle">It appears inside the Ledger and never leaves it. This is done once.</div>
+      </div>
+
+      <p class="caption" id="nk-context"></p>
+
+      <div class="field">
+        <label for="nk-name">Your name</label>
+        <input type="text" id="nk-name" spellcheck="false" placeholder="Boris Zozulya" />
+      </div>
+
+      <div class="field">
+        <label for="nk-email">Email</label>
+        <input type="text" id="nk-email" spellcheck="false" placeholder="you@example.com" />
+      </div>
+
+      <p class="caption">At least 5 characters in the name — that is what GnuPG requires.</p>
+
+      <div class="status-row" id="nk-check">
+        <span class="status-dot"></span>
+        <span class="status-text" id="nk-check-text"></span>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-genkey" disabled>Create the key</button>
+      <button class="btn quiet" data-action="reset">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Creating the key ════════════ -->
+  <section class="screen" id="screen-keybusy">
+    <div class="content centered">
+      <div class="pulse">
+        <svg viewBox="0 0 64 74" class="lock-svg working" aria-hidden="true">
+          <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
+          <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
+          <circle class="pin" cx="32" cy="47" r="4.2" />
+          <path class="stem" d="M32 51.5v6" />
+        </svg>
+      </div>
+      <div class="hero-text center">
+        <div class="title">Creating the key</div>
+        <div class="subtitle">Watch the Ledger screen — it will ask for a PIN. Factory default: <b>123456</b>, admin <b>12345678</b>.</div>
+      </div>
+      <div class="loader"></div>
+      <button class="linklike" id="btn-toggle-log">Show details</button>
+      <pre class="log" id="key-log" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ════════════ Key created ════════════ -->
+  <section class="screen" id="screen-keydone">
+    <div class="content">
+      <div class="hero-text">
+        <div class="title">Your key is ready</div>
+        <div class="subtitle">Save these details. When the Ledger updates, the key is wiped — this is the only way back.</div>
+      </div>
+
+      <div class="section-label">Recovery card</div>
+      <div class="card" id="recovery-box"></div>
+
+      <p class="caption warn">Without them your files can never be opened again. Print it or copy it out by hand.</p>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-save-recovery">Save the recovery card</button>
+      <button class="btn" id="btn-continue">Continue</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Encrypt ════════════ -->
+  <section class="screen" id="screen-encrypt">
+    <div class="content">
+      <div class="section-label">File</div>
+      <div class="card">
+        <div class="kv-row"><span class="kv-key">Name</span><span class="kv-val" id="enc-name"></span></div>
+        <div class="kv-row"><span class="kv-key">Size</span><span class="kv-val" id="enc-size"></span></div>
+        <div class="kv-row"><span class="kv-key">Key</span><span class="kv-val" id="mk-title"></span></div>
+      </div>
+
+      <p class="caption">Only you will be able to open it — with this Ledger in hand.</p>
+
+      <div class="status-row" id="enc-check">
+        <span class="status-dot"></span>
+        <span class="status-text" id="enc-check-text"></span>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-encrypt">Lock the file</button>
+      <button class="btn quiet" data-action="reset">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Decrypt ════════════ -->
+  <section class="screen" id="screen-decrypt">
+    <div class="content">
+      <div class="section-label">Locked file</div>
+      <div class="card">
+        <div class="kv-row"><span class="kv-key">Name</span><span class="kv-val" id="dec-name"></span></div>
+        <div class="kv-row"><span class="kv-key">Size</span><span class="kv-val" id="dec-size"></span></div>
+      </div>
+
+      <p class="caption">The device will ask for a PIN. If you never changed it — 123456.</p>
+
+      <div class="status-row" id="dec-check">
+        <span class="status-dot"></span>
+        <span class="status-text" id="dec-check-text"></span>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-decrypt">Open the file</button>
+      <button class="btn quiet" data-action="reset">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Working ════════════ -->
+  <section class="screen" id="screen-busy">
+    <div class="content centered">
+      <div class="pulse">
+        <svg viewBox="0 0 64 74" class="lock-svg working" aria-hidden="true">
+          <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
+          <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
+          <circle class="pin" cx="32" cy="47" r="4.2" />
+          <path class="stem" d="M32 51.5v6" />
+        </svg>
+      </div>
+      <div class="hero-text center">
+        <div class="title" id="busy-text"></div>
+        <div class="subtitle" id="busy-tip"></div>
+      </div>
+      <div class="loader"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ Done ════════════ -->
+  <section class="screen" id="screen-done">
+    <div class="content centered">
+      <div class="check">
+        <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-16"/></svg>
+      </div>
+      <div class="hero-text center">
+        <div class="title" id="done-title"></div>
+        <div class="filename" id="done-file"></div>
+        <div class="subtitle" id="done-explain"></div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" id="btn-reveal">Show in Finder</button>
+      <button class="btn" id="btn-trash">Move the unlocked file to Trash</button>
+      <button class="btn quiet" data-action="reset">Done</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Error ════════════ -->
+  <section class="screen" id="screen-error">
+    <div class="content centered">
+      <div class="check bad">
+        <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M26 15v16"/><path d="M26 36.5v.01"/></svg>
+      </div>
+      <div class="hero-text center">
+        <div class="title" id="err-title">That did not work</div>
+        <div class="subtitle" id="err-text"></div>
+      </div>
+      <p class="caption" id="err-tip" hidden></p>
+    </div>
+
+    <div class="bottom">
+      <button class="btn primary" data-action="reset">OK</button>
+      <button class="btn quiet" id="btn-err-help">Open the setup guide</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="renderer.js"></script>
+</body>
+</html>
