@@ -27,9 +27,11 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Pinned to majors that run on node24 — GitHub deprecated the node20
+      # action runtime.
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -103,7 +105,7 @@ jobs:
           shasum -a 256 Sealbox.dmg > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sealbox-macos
           path: |
@@ -112,7 +114,7 @@ jobs:
 
       - name: Attach to the release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           # make_latest keeps
           # /releases/latest/download/Sealbox.dmg pointing at this build —

@@ -9,9 +9,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Pinned to majors that run on node24: GitHub deprecated the node20
+      # runtime for actions, and anything still on it is force-migrated with a
+      # warning on every run.
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 

@@ -37,6 +37,14 @@ screen uses seven, so the app uses seven throughout.
 Inline `style` attributes are gone, because the renderer's Content-Security-Policy forbids them —
 the app would have rendered unstyled fragments in Electron while looking correct in a browser.
 
+### Build
+
+GitHub Actions dropped the node20 runtime, so every action pinned to a major
+built for it ran with a deprecation warning. All four are now on majors that run on node24:
+`actions/checkout@v7`, `actions/setup-node@v7`, `actions/upload-artifact@v7` and
+`softprops/action-gh-release@v3`. Their inputs are unchanged, so the workflows are otherwise
+the same.
+
 ### Two dead ends closed
 
 - **Details** on the status row used to open an empty recovery card, because the values only
