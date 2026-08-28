@@ -29,6 +29,7 @@ function inlineFonts(css) {
 const html = read('index.html')
   .replace(/<meta http-equiv="Content-Security-Policy"[\s\S]*?\/>\s*/, '')
   .replace('<link rel="stylesheet" href="styles.css" />', `<style>\n${inlineFonts(read('styles.css'))}\n</style>`)
+  .replace('<script src="copy.js"></script>', `<script>\n${read('copy.js')}\n</script>`)
   .replace('<script src="renderer.js"></script>', `<script>\n${read('renderer.js')}\n</script>`);
 
 // the source string goes into iframe.srcdoc — JSON.stringify handles escaping,

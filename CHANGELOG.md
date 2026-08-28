@@ -37,6 +37,22 @@ screen uses seven, so the app uses seven throughout.
 Inline `style` attributes are gone, because the renderer's Content-Security-Policy forbids them —
 the app would have rendered unstyled fragments in Electron while looking correct in a browser.
 
+### Two dead ends closed
+
+- **Details** on the status row used to open an empty recovery card, because the values only
+  existed in memory right after a key was created. It now fills them from the key that is on the
+  device, using the fixed generation timestamp the app always regenerates with.
+- Starting an operation with **GnuPG missing** left a spinner running forever, waiting for
+  something no amount of waiting could fix. That state now offers the setup guide instead.
+
+### The wording is now testable
+
+Every device state and every setup step lives in `renderer/copy.js`, which loads both in the
+window and in a test. `test/copy.test.js` checks that all eight device states have a title, that
+each one that needs a fix says what the fix is, that the nine setup steps each point at a screen
+that exists, and that the progress bar advances one segment per step. The smoke test walks all
+eighteen screens in the real window and fails if any renders empty or spills outside 520x640.
+
 ## 1.0.2 — first public release
 
 Everything below was fixed before publication. The repository's history starts here. These items

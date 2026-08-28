@@ -111,17 +111,10 @@ function icon(el, name) {
 
 /* ---------- device status ---------- */
 
-// One row, eight states. The wording is the design's, verbatim.
-const DEVICE_ROWS = {
-  'no-gpg':    { icon: 'shield-plus',  title: 'Ledger not set up',  sub: 'Set up your Ledger to create and use your key.', action: 'Set up' },
-  checking:    { icon: 'hourglass',    title: 'Checking Ledger…' },
-  disconnected:{ icon: 'link-broken',  title: 'Ledger disconnected', sub: 'Connect your Ledger when you need it.', action: 'Connect' },
-  closed:      { icon: 'alert',        title: 'Open OpenPGP',        sub: 'Open the OpenPGP app on your Ledger.' },
-  'ledger-live':{ icon: 'alert',       title: 'Quit Ledger Live',    sub: 'Ledger Live is using your Ledger.', action: 'Check again' },
-  ready:       { icon: 'check',        title: 'Ledger ready',        action: 'Details', secondary: true, ready: true },
-  'no-key':    { icon: 'pin',          title: 'Key not found',       sub: 'Restore your key to access encrypted files.', action: 'Restore key' },
-  error:       { icon: 'alert',        title: 'Ledger unavailable',  sub: 'Sealbox couldn’t connect to your Ledger.', action: 'Try again' },
-};
+// The wording for every device state and setup step lives in copy.js, so a
+// test can check that no state is left without something to say.
+const COPY = (window.SEALBOX_COPY || require('./copy.js'));
+const DEVICE_ROWS = COPY.DEVICE_ROWS;
 
 function paintLedgerBar(deviceState) {
   const row = DEVICE_ROWS[deviceState] || DEVICE_ROWS.error;
@@ -147,14 +140,7 @@ async function refreshStatus() {
   return res.value;
 }
 
-const DEVICE_SCREEN = {
-  disconnected: { title: 'Connect your Ledger', sub: null, status: 'Waiting for Ledger…' },
-  closed:       { title: 'Open OpenPGP', sub: 'Open the OpenPGP app on your Ledger.', status: 'Waiting for Ledger…' },
-  'ledger-live':{ title: 'Connect your Ledger', sub: null, status: 'Waiting for Ledger…', note: 'Ledger Live is using your Ledger' },
-  'no-key':     { title: 'Connect your Ledger', sub: null, status: 'Ledger ready', ready: true, note: 'This Ledger can’t decrypt the file', note2: 'Connect a Ledger that holds one of the required keys' },
-  error:        { title: 'Connect your Ledger', sub: null, status: 'Waiting for Ledger…', note: 'Reconnect your Ledger to continue.' },
-  'no-gpg':     { title: 'Finish setting up', sub: 'Sealbox needs a few tools before it can talk to your Ledger.', status: 'Waiting for Ledger…' },
-};
+const DEVICE_SCREEN = COPY.DEVICE_SCREEN;
 
 function paintDeviceScreen(deviceState) {
   const row = DEVICE_SCREEN[deviceState] || DEVICE_SCREEN.error;
@@ -167,6 +153,10 @@ function paintDeviceScreen(deviceState) {
   $('device-ring').hidden = Boolean(row.ready);
   $('device-check').hidden = !row.ready;
   $('device-status').classList.toggle('done', Boolean(row.ready));
+  // Waiting is fine when the fix is physical — plug it in, open the app. When
+  // the machine itself is not ready there is nothing to wait for, so offer the
+  // guide instead of leaving a spinner running forever.
+  $('device-setup').hidden = deviceState !== 'no-gpg';
   show('screen-device');
   if (row.note) notice(row.note, row.note2);
 }
@@ -379,9 +369,23 @@ async function addPendingKey() {
   show('screen-drop');
 }
 
+/* The Details button on the status row. It shows the same card as the last step
+   of setup, filled from the key that is actually on the device — so it is
+   never an empty form. */
+function showKeyDetails() {
+  const recovery = state.env && state.env.recovery;
+  if (!recovery) return openSetup(1);
+  state.recovery = recovery;
+  $('rec-time').textContent = recovery.timestamp;
+  $('rec-name').textContent = recovery.name || '—';
+  $('rec-mail').textContent = recovery.email || '—';
+  $('rec-type').textContent = recovery.keyType || '—';
+  openSetup(8);
+}
+
 /* ---------- setup ---------- */
 
-const SETUP_TOTAL = 7;
+const SETUP_TOTAL = COPY.SETUP_TOTAL;
 
 function openSetup(step) {
   state.setupStep = step;
@@ -551,6 +555,7 @@ function wire() {
 
   on('btn-encrypt', 'click', runEncrypt);
   on('device-close', 'click', () => { stopWaiting(); show('screen-drop'); });
+  on('device-setup', 'click', () => { stopWaiting(); openSetup(1); });
   on('done-close', 'click', reset);
   on('btn-reveal', 'click', () => bridge.reveal(state.result.outputPath));
   on('btn-trash', 'click', async () => {
@@ -562,9 +567,11 @@ function wire() {
   });
 
   on('ledger-action', 'click', async () => {
-    const device = state.env ? state.env.device : null;
-    if (device === 'ready') return openSetup(8);
-    if (device === 'no-gpg' || device === 'no-key') return openSetup(1);
+    const current = state.env ? state.env.device : null;
+    if (current === 'ready') return showKeyDetails();
+    if (current === 'no-gpg' || current === 'no-key') return openSetup(1);
+    // "Connect", "Check again", "Try again" all mean the same thing: look again.
+    paintLedgerBar('checking');
     await refreshStatus();
   });
   on('ledgerbar', 'click', (e) => { if (e.target.id !== 'ledger-action') refreshStatus(); });
@@ -647,6 +654,7 @@ function demoApi() {
         { id: 'AA11BB22CC33DD44', fingerprint: 'AA11BB22CC33DD44', name: 'Alex Morgan', email: 'alex@example.com', isNew: true },
         { id: 'FF99EE88DD77CC66', fingerprint: 'FF99EE88DD77CC66', name: 'John Smith', email: 'john@example.com' },
       ],
+      recovery: { timestamp: '19990101T000000!', name: 'Boris', email: 'boris@example.com', keyType: 'ed25519 / rsa2048' },
     }),
     inspect: async () => ok({ name: 'contract.pdf', size: 2516582, encryption: 'unknown', keyIds: [], isDirectory: false }),
     inspectKey: async () => ok({ name: 'Alex Morgan', email: 'alex@example.com', fingerprint: 'E4C302BC8672419D', fingerprintPretty: 'E4C3 02BC 8672 419D', already: false }),

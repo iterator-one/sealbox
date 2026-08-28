@@ -101,6 +101,20 @@ handle('env:status', async () => {
     };
   });
 
+  // The recovery details of the key that is on the device. The timestamp is not
+  // read from the key: Sealbox always generates with the same fixed one, and it
+  // is that value — not the key's own creation date — that has to be typed back
+  // in to regenerate it.
+  const mineUid = mine ? keys.splitUid(mine.uids[0] || '') : null;
+  const recovery = mine
+    ? {
+        timestamp: card.FAKED_TIME,
+        name: mineUid.name,
+        email: mineUid.email,
+        keyType: mine.algo || 'ed25519 / rsa2048',
+      }
+    : null;
+
   return {
     gpg: env.gpg,
     version: env.version,
@@ -109,6 +123,7 @@ handle('env:status', async () => {
     ledgerLive: facts.ledgerLive,
     keys: list,
     myKey: mine,
+    recovery,
     appVersion: APP_VERSION,
   };
 });
