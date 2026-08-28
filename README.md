@@ -15,7 +15,7 @@ signed — [how to open it](INSTALL.md#3-open-it-the-first-time) takes twenty se
 
 [Install](INSTALL.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)
 
-> **v1.0.2.** Nobody outside this repository has reviewed the code, and key generation on the
+> **v1.1.0.** Nobody outside this repository has reviewed the code, and key generation on the
 > device has not been tested on real hardware. Keep a second copy of anything you cannot afford
 > to lose. Full list: [Known gaps](SECURITY.md#9-known-gaps).
 
@@ -23,8 +23,9 @@ signed — [how to open it](INSTALL.md#3-open-it-the-first-time) takes twenty se
 
 ## What it does
 
-Drag a file onto the window. Sealbox writes an encrypted copy, `report.docx.gpg`, next to the
-original. To read it, drag the `.gpg` file back in with the device connected.
+Drag a file onto the window and choose who may open it: yourself, or anyone whose public key you
+have imported. Sealbox writes an encrypted copy, `report.docx.gpg`, next to the original. To
+read a file encrypted for you, drag the `.gpg` file back in with the device connected.
 
 The format is standard OpenPGP, not a format of our own. `gpg --decrypt report.docx.gpg` opens
 it on any machine. If this project is abandoned tomorrow, your files still open.
@@ -46,9 +47,15 @@ can.
    created inside the secure element and never leaves it.
 3. Sealbox shows a recovery card — three values needed to recreate the same key after a Ledger
    update erases it. Save it.
-4. The file is encrypted to your key and signed by the device. The device asks for the PIN, and
+4. You tick who may open the file. Your own key is ticked by default; other people appear here
+   once you have imported the public key they sent you.
+5. The file is encrypted to those keys and signed by the device. The device asks for the PIN, and
    for a button press if UIF is on.
-5. You get `report.docx.gpg`.
+6. You get `report.docx.gpg`.
+
+Sending a file to someone else needs their **public** key, which they can send you over any
+channel — it is public. Sealbox reads the file, shows you the name and fingerprint on it, and
+imports it only after you agree.
 
 Sealbox contains no cryptographic code. GnuPG does the cryptography, and `scdaemon` (part of
 GnuPG) talks to the device. Reasoning: [SECURITY.md §4](SECURITY.md#4-dependencies).
@@ -68,15 +75,20 @@ gpg --decrypt report.docx.gpg     # Good signature from ...
 ## Setup
 
 The app opens on the drop screen. The setup guide appears only when something is missing —
-after a drop that cannot proceed, or when you click the status line or the "?" button. Four
-steps, no terminal:
+after a drop that cannot proceed, or when you click the status row at the bottom of the window.
+Seven steps, no terminal:
 
 1. **GnuPG.** One button. Sealbox installs it through Homebrew or uses the copy bundled in the
    app, then writes the reader configuration.
 2. **The OpenPGP app on the Ledger.** Ledger Live → Developer mode → My Ledger → OpenPGP.
    Devices: Nano X, Nano S Plus, Stax, Flex, Apex P.
 3. **Seed mode on.** Without it the key cannot be recreated after an update.
-4. **Connection check.** The indicator turns green by itself.
+4. **Connection check.** The indicator turns green by itself. The row tells you which of the
+   three usual problems you have: nothing plugged in, the OpenPGP app not open, or Ledger Live
+   holding the device.
+5. **Your name and email**, which become part of the key.
+6. **The key is created on the device**, with the PIN typed on the Ledger itself.
+7. **Recovery details**, which you copy or save to a file.
 
 The device is visible to macOS as a smartcard only while the OpenPGP app is open on its screen,
 and only while Ledger Live is closed. Ledger Live keeps the device to itself.
@@ -136,14 +148,19 @@ src/crypto/cardkey.js       key generation on the device, via GnuPG's machine pr
 src/crypto/inspect.js       what kind of file is this, without decrypting it
 src/paths.js                output filenames; never overwrites, never escapes the directory
 src/setup/bootstrap.js      installing and configuring GnuPG without a terminal
-renderer/index.html         markup for all ten screens
+src/crypto/keys.js          reading and importing other people's public keys
+src/device/state.js         why the Ledger is unavailable: unplugged, locked, or held by Ledger Live
+renderer/index.html         markup for all eighteen screens
 renderer/styles.css         the whole visual layer, no framework
 renderer/renderer.js        UI logic; falls back to a demo bridge when window.api is missing
+renderer/fonts/             Inter, the interface typeface (SIL Open Font License)
 build-dmg.command           double-click on a Mac: builds dist/Sealbox.dmg
 publish.command             double-click on a Mac: pushes and tags, GitHub builds the .dmg
 tools/build-preview.js      builds preview.html from the three renderer files
 tools/vendor-gpg.sh         bundles GnuPG into the .app (optional, macOS only)
 test/crypto.test.js         container detection, path safety, card-key parsing
+test/keys.test.js           parsing public-key listings and user ids
+test/device.test.js         which device state each combination of facts produces
 test/setup.test.js          connection-method order and gpg discovery
 test/smoke-electron.js      boots the real app and checks that a screen renders
 preview.html                generated by `npm run preview`, committed so the UI can be reviewed
@@ -179,6 +196,15 @@ save them to a file. What that file is worth to an attacker:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Security findings:
 [SECURITY.md §11](SECURITY.md#11-reporting-a-problem).
+
+## Design
+
+The interface is built from a Figma file, screen by screen: the 520x640 window, the 494px
+content column, the colour set, the type scale and every string come from there. `preview.html`
+renders the same markup in a browser so a designer can check it without a Mac.
+
+Neue Montreal, the display face in the design, is a commercial font and cannot ship with an open
+source app, so titles fall back to Inter — which does ship, under the SIL Open Font License.
 
 ## Licence
 

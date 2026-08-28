@@ -30,6 +30,16 @@ LGPL v3. Used as an unmodified npm dependency, only to read OpenPGP packet heade
 (see `src/crypto/inspect.js`).
 Source: https://github.com/openpgpjs/openpgpjs
 
+## Inter (typeface)
+
+`renderer/fonts/inter-400.woff2` and `inter-500.woff2`, from the Inter project by Rasmus
+Andersson. Licensed under the **SIL Open Font License 1.1**, which permits bundling and
+redistribution inside an application. Unmodified.
+Source: https://github.com/rsms/inter
+
+Neue Montreal, the display face used in the design file, is a commercial font and is **not**
+included. Titles fall back to Inter unless the font is installed on the machine.
+
 ## Electron
 
 MIT, with its own bundled third-party components (Chromium — BSD-style, Node.js — MIT).

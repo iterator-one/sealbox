@@ -3,7 +3,7 @@
 This document is for people who want to know what the program actually does before trusting a
 file to it: reviewers, security engineers, and anyone whose files matter.
 
-**Status: v1.0.2. No independent review.** One important path — key generation on the device —
+**Status: v1.1.0. No independent review.** One important path — key generation on the device —
 has never been run against real hardware by the authors. See [§9](#9-known-gaps).
 
 ---
@@ -27,6 +27,7 @@ Sealbox implements no cryptography. GnuPG does all of it, and delegates card ope
 | The format is not proprietary | Output is standard OpenPGP (RFC 9580). Check with `gpg --list-packets file.gpg`. If this project disappears, `gpg --decrypt` still opens your files. |
 | No network traffic | The app makes no HTTP requests. The renderer's CSP is `default-src 'none'`. The one exception is the optional GnuPG install step, which runs Homebrew — see [§5](#5-privileged-operations). |
 | No telemetry | No analytics, no crash reporter, no update check. Grep for `http` in `src/` and `main.js`. |
+| A public key is never imported behind your back | A dropped key file is read with `--show-keys`, which parses and imports nothing. The name and fingerprint are shown, and `--import` runs only after you press the button (`src/crypto/keys.js`). A file containing a *private* key is refused. |
 
 ## 3. What it does not protect against
 
@@ -82,6 +83,14 @@ Our own code is about 1 100 lines across nine files (`main.js`, `preload.js`, `s
 - **Known cost:** Electron is a whole Chromium, which is a large attack surface. A native app
   would be smaller. This is a trade for cross-platform reach and readable UI code.
 
+### Inter — the interface typeface
+
+Two `.woff2` files under `renderer/fonts/`, loaded by the stylesheet. A font is data, not code:
+it is parsed by the same font engine that handles every other font on the system. It ships with
+the app because the renderer is not allowed to fetch anything from the network (`font-src 'self'`),
+and because a downloaded font would be a network call the app promises not to make. Licence: SIL
+Open Font License 1.1.
+
 ### Nothing else at runtime
 
 `package.json` has exactly one production dependency (`openpgp`). Everything else is a build
@@ -91,6 +100,12 @@ tool. No analytics SDK, no logging service, no auto-updater.
 
 Two places where Sealbox does something worth looking at closely. Both are in
 `src/setup/bootstrap.js`, and both start with a button press in the setup screen.
+
+A third thing worth knowing about, though it is not privileged: to explain *why* a device is
+unavailable, `src/device/state.js` runs two read-only commands, `ioreg -p IOUSB` (is a Ledger on
+the USB bus?) and `pgrep -x "Ledger Live"` (is Ledger Live holding it?). Both are observations,
+neither changes anything, and if either is unavailable the state simply degrades to
+"disconnected" instead of guessing.
 
 ### Installing GnuPG
 
@@ -152,6 +167,12 @@ text.
   is ever interpolated into a shell command anywhere in the code.
 - **The interface never builds a path.** It receives paths from the main process and passes them
   back unchanged.
+- **Key files are parsed before they are trusted.** `--show-keys` reads a dropped `.asc` without
+  importing it, so a malformed or hostile file cannot silently end up in your keyring. A file
+  that turns out to contain a private key is refused outright: Sealbox has no reason to hold
+  anybody's secret key.
+- **Recipients are passed to gpg as `--recipient <fingerprint>` arguments**, from the list the
+  keyring itself produced — the interface never supplies a free-text recipient.
 
 ## 9. Known gaps
 
@@ -170,7 +191,10 @@ Ordered by how much they should worry you.
 4. **Files are read fully into memory** for type detection and encryption. Not suitable for very
    large files yet.
 5. **No independent review.** Nobody outside this repository has read the code.
-6. **Bundled-GnuPG mode is untested,** so releases do not use it. `tools/vendor-gpg.sh` has not been run end to end, and rewriting load paths inside the copied binaries invalidates their signatures. The app installs GnuPG through Homebrew on the setup screen instead.
+6. **The `ioreg` / `pgrep` device heuristics are best-effort.** They make the error messages
+   specific, but a state of "disconnected" can also mean "we could not tell". Nothing
+   cryptographic depends on them.
+7. **Bundled-GnuPG mode is untested,** so releases do not use it. `tools/vendor-gpg.sh` has not been run end to end, and rewriting load paths inside the copied binaries invalidates their signatures. The app installs GnuPG through Homebrew on the setup screen instead.
 
 ## 10. Checking the claims yourself
 

@@ -29,16 +29,23 @@ app.whenReady().then(async () => {
     activeScreens: document.querySelectorAll('.screen.is-active').length,
     active: (document.querySelector('.screen.is-active') || {}).id || null,
     dropTitle: (document.querySelector('#screen-drop .title') || {}).textContent || '',
-    version: (document.querySelector('#version-badge') || {}).textContent || '',
+    ledger: (document.querySelector('#ledger-title') || {}).textContent || '',
+    screens: document.querySelectorAll('.screen').length,
+    // every <use href="#..."> must resolve to a symbol, or the screen renders
+    // with invisible icons and still looks "fine" to a unit test
+    brokenIcons: [...document.querySelectorAll('use')]
+      .map((u) => u.getAttribute('href'))
+      .filter((h) => h && h.startsWith('#') && !document.getElementById(h.slice(1))).length,
     bridge: typeof window.api,
   }))()`);
 
-  const expected = require(path.join(__dirname, '..', 'package.json')).version;
   const checks = [
     [state.activeScreens === 1, `exactly one active screen, got ${state.activeScreens}`],
     [state.active === 'screen-drop', `opens on the drop screen, got ${state.active}`],
-    [state.dropTitle.trim().length > 0, 'the drop screen has visible text'],
-    [state.version === `v${expected}`, `version badge shows v${expected}, got ${state.version}`],
+    [state.dropTitle.trim() === 'Drop a file here', `the drop screen reads "Drop a file here", got "${state.dropTitle}"`],
+    [state.ledger.trim().length > 0, 'the Ledger status row says something'],
+    [state.screens >= 18, `all screens are present, got ${state.screens}`],
+    [state.brokenIcons === 0, `${state.brokenIcons} icon references point at nothing`],
     [state.bridge === 'object', 'preload exposed the bridge'],
   ];
 

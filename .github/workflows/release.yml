@@ -8,8 +8,8 @@ name: release
 #
 # How to cut a release:
 #
-#   git tag v1.0.2
-#   git push origin v1.0.2
+#   git tag v1.1.0
+#   git push origin v1.1.0
 #
 # A few minutes later the .dmg is attached to the Release page and anyone can
 # download it.

@@ -1,268 +1,405 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;" />
-  <title>Sealbox</title>
-  <link rel="stylesheet" href="styles.css" />
+<title>Sealbox</title>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; script-src 'self'; font-src 'self'; img-src 'self' data:;" />
+<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-
-<header class="header">
-  <div class="header-side left">
-    <button class="circle-btn" id="btn-header-back" hidden aria-label="Back">‹</button>
-  </div>
-  <div class="header-title" id="header-title">Sealbox</div>
-  <div class="header-side right">
-    <span class="version-badge" id="version-badge">v1.0.2</span>
-    <button class="circle-btn" id="btn-help" aria-label="Setup guide">?</button>
-  </div>
-</header>
-
-<main class="stage">
-
-  <!-- ════════════ Setup guide ════════════ -->
-  <section class="screen" id="screen-guide">
-    <div class="content">
-      <div class="progress" id="guide-dots"></div>
-
-      <div class="hero-text">
-        <div class="title" id="guide-title"></div>
-        <div class="subtitle" id="guide-lead"></div>
-      </div>
-
-      <div class="steps" id="guide-steps"></div>
-
-      <button class="btn primary" id="btn-guide-action" hidden></button>
-      <pre class="log" id="guide-log" hidden></pre>
-
-      <div class="status-row" id="guide-check" hidden>
-        <span class="status-dot"></span>
-        <span class="status-text" id="guide-check-text"></span>
-      </div>
-
-      <button class="linklike" id="btn-guide-fix" hidden></button>
-      <p class="caption" id="guide-note" hidden></p>
+  <svg class="sprite" aria-hidden="true"><defs>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2.27V6.4c0 .56 0 .84.11 1.05.1.19.25.34.44.44.21.11.49.11 1.05.11h4.13M14 2h-4.8c-1.68 0-2.52 0-3.16.33a3 3 0 0 0-1.31 1.31C4.4 4.28 4.4 5.12 4.4 6.8v10.4c0 1.68 0 2.52.33 3.16a3 3 0 0 0 1.31 1.31c.64.33 1.48.33 3.16.33h5.6c1.68 0 2.52 0 3.16-.33a3 3 0 0 0 1.31-1.31c.33-.64.33-1.48.33-3.16V8L14 2Z"/>
+    </symbol>
+    <symbol id="i-file-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2.27V6.4c0 .56 0 .84.11 1.05.1.19.25.34.44.44.21.11.49.11 1.05.11h4.13M20 10V8l-6-6H9.2c-1.68 0-2.52 0-3.16.33a3 3 0 0 0-1.31 1.31C4.4 4.28 4.4 5.12 4.4 6.8v10.4c0 1.68 0 2.52.33 3.16a3 3 0 0 0 1.31 1.31c.64.33 1.48.33 3.16.33H12"/>
+      <path d="M17.5 13.2 21 14.6v2.9c0 2.1-1.4 3.5-3.5 4.5-2.1-1-3.5-2.4-3.5-4.5v-2.9l3.5-1.4Z"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M5 12h7m0 0h7m-7 0V5m0 7v7"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.67 7.67 6.22 11.33 13.33 4"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M18 6 6 18M6 6l12 12"/>
+    </symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5m0 0 7 7m-7-7 7-7"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 9v4m0 4h.01M10.6 3.8 2.4 18a1.6 1.6 0 0 0 1.4 2.4h16.4a1.6 1.6 0 0 0 1.4-2.4L13.4 3.8a1.6 1.6 0 0 0-2.8 0Z"/>
+    </symbol>
+    <symbol id="i-shield-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 8v6m-3-3h6m-3-9 7 3v5c0 4.2-2.8 7.2-7 9-4.2-1.8-7-4.8-7-9V5l7-3Z"/>
+    </symbol>
+    <symbol id="i-link-broken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 17H7A5 5 0 0 1 7 7h2m6 10h2a5 5 0 0 0 0-10h-2M12 2v3m0 14v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1"/>
+    </symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 10V7a5 5 0 0 1 9.6-2M5 10h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z"/>
+    </symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2h12M6 22h12M8 2v4.2c0 .5.2 1 .6 1.4L12 11l3.4-3.4c.4-.4.6-.9.6-1.4V2M8 22v-4.2c0-.5.2-1 .6-1.4L12 13l3.4 3.4c.4.4.6.9.6 1.4V22"/>
+    </symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 8V5.2c0-1.1 0-1.7.2-2.1a2 2 0 0 1 .9-.9c.4-.2 1-.2 2.1-.2h7.6c1.1 0 1.7 0 2.1.2a2 2 0 0 1 .9.9c.2.4.2 1 .2 2.1v7.6c0 1.1 0 1.7-.2 2.1a2 2 0 0 1-.9.9c-.4.2-1 .2-2.1.2H16"/>
+      <path d="M5.2 8h7.6c1.1 0 1.7 0 2.1.2a2 2 0 0 1 .9.9c.2.4.2 1 .2 2.1v7.6c0 1.1 0 1.7-.2 2.1a2 2 0 0 1-.9.9c-.4.2-1 .2-2.1.2H5.2c-1.1 0-1.7 0-2.1-.2a2 2 0 0 1-.9-.9c-.2-.4-.2-1-.2-2.1v-7.6c0-1.1 0-1.7.2-2.1a2 2 0 0 1 .9-.9c.4-.2 1-.2 2.1-.2Z"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 2 19 4m-2 2 2-2m0 0 2 2-4 4-2-2m-2 2a5 5 0 1 1-7 7 5 5 0 0 1 7-7Zm0 0 4-4"/>
+    </symbol>
+    <symbol id="i-box-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1.75" y="1.75" width="20.5" height="20.5" rx="4.8"/>
+    </symbol>
+    <symbol id="i-box-on" viewBox="0 0 24 24" fill="none">
+      <rect x="1" y="1" width="22" height="22" rx="4.8" fill="#325FEB"/>
+      <path d="M7.9 12 10.6 15.1 16.1 8.9" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs></svg>
+<div class="window">
+  <div class="titlebar">
+    <div class="traffic">
+      <span class="close" id="win-close"></span><span class="min" id="win-min"></span><span class="zoom"></span>
     </div>
+    <div class="titlebar-title">Sealbox</div>
+  </div>
 
-    <div class="bottom">
-      <button class="btn primary" id="btn-guide-next">Next</button>
-      <button class="btn quiet" id="btn-guide-back">Back</button>
-    </div>
-  </section>
+  <div class="screens" id="screens">
 
-  <!-- ════════════ Main screen ════════════ -->
-  <section class="screen" id="screen-drop">
-    <div class="content">
+    <!-- ============ Main page ============ -->
+    <section class="screen" id="screen-drop">
+      <div class="topbar">
+        <button class="linkbtn" id="btn-import-key">
+          <svg class="icon ink-accent"><use href="#i-plus"/></svg>
+          Import public key
+        </button>
+      </div>
       <div class="dropzone" id="dropzone">
-        <div class="lock">
-          <svg viewBox="0 0 64 74" class="lock-svg" aria-hidden="true">
-            <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
-            <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
-            <circle class="pin" cx="32" cy="47" r="4.2" />
-            <path class="stem" d="M32 51.5v6" />
-          </svg>
+        <div class="glow dropglow">
+          <div class="g-core"></div><div class="g-ring-1"></div><div class="g-ring-2"></div><div class="g-inner"></div>
+          <div class="g-mark"><svg width="48" height="48" class="ink-glyph"><use href="#i-file"/></svg></div>
         </div>
-        <div class="hero-text center">
-          <div class="title">Drop a file here</div>
-          <div class="subtitle">It becomes readable only to you</div>
+        <h1 class="title">Drop a file here</h1>
+        <p class="subtitle"><span class="linklike" id="btn-choose">or choose a file</span></p>
+      </div>
+      <div class="ledgerbar" id="ledgerbar">
+        <div class="chip" id="ledger-chip"><svg class="icon"><use href="#i-hourglass"/></svg></div>
+        <div class="text">
+          <div class="row-title" id="ledger-title">Checking Ledger…</div>
+          <div class="row-sub" id="ledger-sub" hidden></div>
+        </div>
+        <button class="btn primary" id="ledger-action" hidden></button>
+      </div>
+    </section>
+
+    <!-- ============ Encrypt: choose recipients ============ -->
+    <section class="screen shell-split" id="screen-keys">
+      <div class="setup-body gap-32">
+        <div class="fileinfo">
+          <span class="filepill" id="keys-file"></span>
+          <h1 class="title">Choose one or more keys</h1>
+        </div>
+        <div class="keylist" id="keylist"></div>
+      </div>
+      <div class="footer">
+        <button class="btn primary" id="btn-encrypt">Encrypt</button>
+        <button class="linkbtn" id="btn-import-key-2">
+          <svg class="icon ink-accent"><use href="#i-plus"/></svg>
+          Import public key
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ Encrypt: nothing to encrypt to ============ -->
+    <section class="screen shell-split" id="screen-nokeys">
+      <div class="fileinfo">
+        <span class="filepill" id="nokeys-file"></span>
+        <div class="heading">
+          <h1 class="title">No public keys yet</h1>
+          <p class="subtitle">Add a public key to encrypt this file.</p>
+          <svg class="nav close" id="nokeys-close"><use href="#i-x"/></svg>
         </div>
       </div>
-
-      <div class="status-row clickable" id="statusline">
-        <span class="status-dot"></span>
-        <span class="status-text"></span>
+      <div class="footer">
+        <button class="btn primary" id="btn-import-key-3">Import public key</button>
+        <button class="linkbtn" id="btn-setup-ledger">
+          <svg class="icon ink-accent"><use href="#i-key"/></svg>
+          Set up my Ledger
+        </button>
       </div>
+    </section>
+
+    <!-- ============ Working (encrypting / decrypting) ============ -->
+    <section class="screen shell-centre" id="screen-working">
+      <div class="glow spinner"><div class="g-core"></div><div class="ring"></div></div>
+      <span class="filepill" id="working-file"></span>
+      <h1 class="title" id="working-title">Encrypting file…</h1>
+      <p class="subtitle plain" id="working-sub"></p>
+    </section>
+
+    <!-- ============ Done ============ -->
+    <section class="screen shell-success" id="screen-done">
+      <div class="stack w-full gap-12">
+        <div class="glow successmark">
+          <div class="g-core"></div><div class="g-inner"></div>
+          <div class="g-mark"><svg width="72" height="72"><use href="#i-file-shield"/></svg></div>
+        </div>
+        <span class="filepill" id="done-file"></span>
+        <h1 class="title" id="done-title">File encrypted</h1>
+        <p class="subtitle plain" id="done-sub"></p>
+      </div>
+      <div class="btn-stack">
+        <button class="btn primary" id="btn-reveal">Show in Finder</button>
+        <button class="btn secondary raised" id="btn-trash">Move original to Trash</button>
+        <p class="caption" id="done-caption">The original file is still on your Mac.</p>
+      </div>
+      <svg class="nav-float tr" id="done-close"><use href="#i-x"/></svg>
+    </section>
+
+    <!-- ============ Waiting for the device mid-operation ============ -->
+    <section class="screen shell-top" id="screen-device">
+      <div class="fileinfo">
+        <span class="filepill" id="device-file"></span>
+        <div class="heading">
+          <h1 class="title" id="device-title">Connect your Ledger</h1>
+          <p class="subtitle" id="device-sub" hidden></p>
+          <svg class="nav close" id="device-close"><use href="#i-x"/></svg>
+        </div>
+      </div>
+      <div class="statusrow" id="device-status">
+        <span class="ring-sm" id="device-ring"></span>
+        <span class="chip ready sm" id="device-check" hidden><svg class="icon"><use href="#i-check"/></svg></span>
+        <span id="device-status-text">Waiting for Ledger…</span>
+      </div>
+    </section>
+
+    <!-- ============ Import a public key ============ -->
+    <section class="screen shell-centre" id="screen-import">
+      <svg class="nav-float tl-29" id="import-back"><use href="#i-arrow-left"/></svg>
+      <div class="glow dropglow">
+        <div class="g-core"></div><div class="g-ring-1"></div><div class="g-ring-2"></div><div class="g-inner"></div>
+        <div class="g-mark"><svg width="48" height="48" class="ink-glyph"><use href="#i-file"/></svg></div>
+      </div>
+      <h1 class="title">Drop a public key file here<br /><span class="linklike" id="btn-choose-key">or choose a file</span></h1>
+      <p class="subtitle">OpenPGP public key (.asc)</p>
+    </section>
+
+    <!-- ============ Review an imported key ============ -->
+    <section class="screen shell-split" id="screen-review">
+      <div class="setup-body gap-32">
+        <div class="heading">
+          <h1 class="title">Add this public key?</h1>
+          <svg class="nav back" id="review-back"><use href="#i-arrow-left"/></svg>
+          <svg class="nav close" id="review-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="stack start w-full gap-16">
+          <div class="card">
+            <div class="field"><div class="v" id="review-name"></div><div class="k" id="review-mail"></div></div>
+            <div class="field"><div class="v" id="review-fpr"></div><div class="k">Fingerprint</div></div>
+          </div>
+          <div class="inforow">
+            <div class="chip"><svg class="icon"><use href="#i-alert"/></svg></div>
+            <div class="text">Files encrypted for this key can be decrypted by its owner.</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" id="btn-add-key">Add public key</button>
+    </section>
+
+    <!-- ============ Setup 1 — intro ============ -->
+    <section class="screen shell-centre" id="s-intro">
+      <div class="glow dropglow">
+        <div class="g-core"></div><div class="g-ring-1"></div><div class="g-ring-2"></div><div class="g-inner"></div>
+        <div class="g-mark"><svg width="56" height="56" class="ink-glyph-strong"><use href="#i-shield-plus"/></svg></div>
+      </div>
+      <h1 class="title">Set up your Ledger</h1>
+      <p class="subtitle w-400">Prepare your Mac and create a key for encrypting and decrypting files.</p>
+      <button class="btn primary btn-float" id="s-intro-next">Start setup</button>
+      <svg class="nav-float tr-24" id="s-intro-close"><use href="#i-x"/></svg>
+    </section>
+
+    <!-- ============ Setup 2 — prepare the Mac ============ -->
+    <section class="screen shell-split" id="s-prepare">
+      <div class="setup-body">
+        <div class="progress" id="p-prepare"></div>
+        <div class="heading">
+          <h1 class="title" id="s-prepare-title">Prepare your Mac</h1>
+          <p class="subtitle" id="s-prepare-sub">Install the tools needed to work with your Ledger.</p>
+          <svg class="nav close" id="s-prepare-close"><use href="#i-x"/></svg>
+        </div>
+        <pre class="log" id="s-prepare-log" hidden></pre>
+      </div>
+      <button class="btn primary" id="s-prepare-next">Prepare Mac</button>
+    </section>
+
+    <!-- ============ Setup 2 — it did not work ============ -->
+    <section class="screen shell-centre gap-32" id="s-prepare-failed">
+      <div class="heading gap-12">
+        <h1 class="title">Couldn’t prepare your Mac</h1>
+        <p class="subtitle" id="s-failed-sub">Something went wrong during setup.</p>
+      </div>
+      <div class="btn-stack">
+        <button class="btn primary" id="s-failed-retry">Try again</button>
+        <button class="btn secondary raised" id="s-failed-details">Show details</button>
+      </div>
+      <pre class="log" id="s-failed-log" hidden></pre>
+    </section>
+
+    <!-- ============ Setup 3 — install OpenPGP ============ -->
+    <section class="screen shell-split" id="s-openpgp">
+      <div class="setup-body">
+        <div class="progress" id="p-openpgp"></div>
+        <div class="heading">
+          <h1 class="title">Install OpenPGP on Ledger</h1>
+          <svg class="nav back" id="s-openpgp-back"><use href="#i-arrow-left"/></svg>
+          <svg class="nav close" id="s-openpgp-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><span class="body">Open <span class="tag">Ledger Live</span></span></div>
+          <div class="step"><span class="num">2</span><span class="body">Open Settings → <span class="tag">Experimental features</span></span></div>
+          <div class="step"><span class="num">3</span><span class="body">Turn on <span class="tag">Developer mode</span></span></div>
+          <div class="step"><span class="num">4</span><span class="body">Open <span class="tag">My Ledger</span></span></div>
+          <div class="step"><span class="num">5</span><span class="body">Find <span class="tag">OpenPGP</span> and install it</span></div>
+        </div>
+        <p class="note">If you see two OpenPGP apps, choose the one without “XL”.</p>
+      </div>
+      <button class="btn primary" id="s-openpgp-next">OpenPGP installed</button>
+    </section>
+
+    <!-- ============ Setup 4 — Seed mode ============ -->
+    <section class="screen shell-split" id="s-seed">
+      <div class="setup-body">
+        <div class="progress" id="p-seed"></div>
+        <div class="heading">
+          <h1 class="title">Enable Seed mode</h1>
+          <p class="subtitle">Seed mode lets you restore your key after a Ledger or OpenPGP update.</p>
+          <svg class="nav back" id="s-seed-back"><use href="#i-arrow-left"/></svg>
+          <svg class="nav close" id="s-seed-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><span class="body">Quit Ledger Live</span></div>
+          <div class="step"><span class="num">2</span><span class="body">Open <span class="tag">OpenPGP</span> on your Ledger</span></div>
+          <div class="step"><span class="num">3</span><span class="body">Open Settings → <span class="tag">Seed mode</span></span></div>
+          <div class="step"><span class="num">4</span><span class="body">Turn it On</span></div>
+        </div>
+        <button class="consent" id="s-seed-consent">
+          <svg class="box"><use href="#i-box-off" id="s-seed-box"/></svg>
+          <span class="text">
+            <span class="k">I understand that Seed mode must stay enabled</span>
+            <span class="s">If it’s turned off, I may lose access to encrypted files after an update.</span>
+          </span>
+        </button>
+      </div>
+      <button class="btn primary" id="s-seed-next" disabled>Seed mode enabled</button>
+    </section>
+
+    <!-- ============ Setup 5 — connect the Ledger ============ -->
+    <section class="screen shell-split" id="s-connect">
+      <div class="setup-body">
+        <div class="progress" id="p-connect"></div>
+        <div class="heading">
+          <h1 class="title">Connect your Ledger</h1>
+          <p class="subtitle" id="s-connect-sub">Connect and unlock your Ledger, then open OpenPGP.<br />Make sure Ledger Live is closed.</p>
+          <svg class="nav back" id="s-connect-back"><use href="#i-arrow-left"/></svg>
+          <svg class="nav close" id="s-connect-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="statusrow" id="s-connect-status">
+          <span class="ring-sm" id="s-connect-ring"></span>
+          <span class="chip ready sm" id="s-connect-check" hidden><svg class="icon"><use href="#i-check"/></svg></span>
+          <span id="s-connect-text">Waiting for Ledger…</span>
+        </div>
+      </div>
+      <button class="btn primary" id="s-connect-next" hidden>Continue</button>
+    </section>
+
+    <!-- ============ Setup 6 — create the key ============ -->
+    <section class="screen shell-split" id="s-key">
+      <div class="setup-body">
+        <div class="progress" id="p-key"></div>
+        <div class="heading">
+          <h1 class="title">Create your encryption key</h1>
+          <p class="subtitle">Your key will be created on your Ledger.</p>
+          <svg class="nav back" id="s-key-back"><use href="#i-arrow-left"/></svg>
+          <svg class="nav close" id="s-key-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="inputs">
+          <input class="input" id="s-key-name" placeholder="Name" spellcheck="false" />
+          <input class="input" id="s-key-mail" placeholder="Email" spellcheck="false" />
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn primary" id="s-key-next">Create key</button>
+        <div class="statusline" id="s-key-status">
+          <span class="chip ready sm"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span>Ledger ready</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Setup 7 — the device is creating it ============ -->
+    <section class="screen shell-split" id="s-creating">
+      <div class="setup-body">
+        <div class="progress" id="p-creating"></div>
+        <div class="heading">
+          <h1 class="title" id="s-creating-title">Finish on your Ledger</h1>
+          <p class="subtitle">Follow the prompts on your Ledger screen to create the key. Enter the PIN when asked and keep the device connected.</p>
+        </div>
+      </div>
+      <div class="statusline" id="s-creating-status" hidden>
+        <span class="chip ready sm"><svg class="icon"><use href="#i-check"/></svg></span>
+        <span>Key created</span>
+      </div>
+    </section>
+
+    <!-- ============ Setup 8 — recovery details ============ -->
+    <section class="screen shell-split" id="s-recovery">
+      <div class="setup-body">
+        <div class="progress" id="p-recovery"></div>
+        <div class="heading">
+          <h1 class="title">Save your recovery details</h1>
+          <p class="subtitle">You’ll need these details if your key has to be restored.</p>
+          <svg class="nav close" id="s-recovery-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="card">
+          <button class="copy" id="s-recovery-copy" title="Copy"><svg width="24" height="24"><use href="#i-copy"/></svg></button>
+          <div class="field"><div class="k">Timestamp</div><div class="v" id="rec-time"></div></div>
+          <div class="field"><div class="k">Name</div><div class="v" id="rec-name"></div></div>
+          <div class="field"><div class="k">Email</div><div class="v" id="rec-mail"></div></div>
+          <div class="field"><div class="k">Key type</div><div class="v" id="rec-type"></div></div>
+        </div>
+        <div class="inforow">
+          <div class="chip"><svg class="icon"><use href="#i-alert"/></svg></div>
+          <div class="text">
+            <div class="k">Your Ledger recovery phrase is separate</div>
+            <div class="s">These recovery details do not contain your 24-word recovery phrase.</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" id="s-recovery-next">Save recovery details</button>
+    </section>
+
+    <!-- ============ Setup 9 — done ============ -->
+    <section class="screen shell-centre gap-32" id="s-done">
+      <div class="stack w-320 gap-12">
+        <div class="glow successmark">
+          <div class="g-core"></div><div class="g-inner"></div>
+          <div class="g-mark"><svg width="72" height="72"><use href="#i-file-shield"/></svg></div>
+        </div>
+        <h1 class="title">Setup complete</h1>
+        <p class="subtitle">Your encryption key is ready.<br />You can encrypt files now. Connect your Ledger when you need to decrypt them.</p>
+      </div>
+      <button class="btn primary" id="s-done-next">Go to Sealbox</button>
+    </section>
+
+    <!-- One notification bar, shared by every screen. -->
+    <div class="notice" id="notice" hidden>
+      <div class="lines"><p id="notice-1"></p><p id="notice-2" hidden></p></div>
+      <button class="dismiss" id="notice-x"><svg width="24" height="24" class="ink-white"><use href="#i-x"/></svg></button>
     </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-pick">Choose a file</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Create a key ════════════ -->
-  <section class="screen" id="screen-newkey">
-    <div class="content">
-      <div class="hero-text">
-        <div class="title">Let's create your key</div>
-        <div class="subtitle">It appears inside the Ledger and never leaves it. This is done once.</div>
-      </div>
-
-      <p class="caption" id="nk-context"></p>
-
-      <div class="field">
-        <label for="nk-name">Your name</label>
-        <input type="text" id="nk-name" spellcheck="false" placeholder="Boris Zozulya" />
-      </div>
-
-      <div class="field">
-        <label for="nk-email">Email</label>
-        <input type="text" id="nk-email" spellcheck="false" placeholder="you@example.com" />
-      </div>
-
-      <p class="caption">At least 5 characters in the name — that is what GnuPG requires.</p>
-
-      <div class="status-row" id="nk-check">
-        <span class="status-dot"></span>
-        <span class="status-text" id="nk-check-text"></span>
-      </div>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-genkey" disabled>Create the key</button>
-      <button class="btn quiet" data-action="reset">Cancel</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Creating the key ════════════ -->
-  <section class="screen" id="screen-keybusy">
-    <div class="content centered">
-      <div class="pulse">
-        <svg viewBox="0 0 64 74" class="lock-svg working" aria-hidden="true">
-          <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
-          <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
-          <circle class="pin" cx="32" cy="47" r="4.2" />
-          <path class="stem" d="M32 51.5v6" />
-        </svg>
-      </div>
-      <div class="hero-text center">
-        <div class="title">Creating the key</div>
-        <div class="subtitle">Watch the Ledger screen — it will ask for a PIN. Factory default: <b>123456</b>, admin <b>12345678</b>.</div>
-      </div>
-      <div class="loader"></div>
-      <button class="linklike" id="btn-toggle-log">Show details</button>
-      <pre class="log" id="key-log" hidden></pre>
-    </div>
-  </section>
-
-  <!-- ════════════ Key created ════════════ -->
-  <section class="screen" id="screen-keydone">
-    <div class="content">
-      <div class="hero-text">
-        <div class="title">Your key is ready</div>
-        <div class="subtitle">Save these details. When the Ledger updates, the key is wiped — this is the only way back.</div>
-      </div>
-
-      <div class="section-label">Recovery card</div>
-      <div class="card" id="recovery-box"></div>
-
-      <p class="caption warn">Without them your files can never be opened again. Print it or copy it out by hand.</p>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-save-recovery">Save the recovery card</button>
-      <button class="btn" id="btn-continue">Continue</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Encrypt ════════════ -->
-  <section class="screen" id="screen-encrypt">
-    <div class="content">
-      <div class="section-label">File</div>
-      <div class="card">
-        <div class="kv-row"><span class="kv-key">Name</span><span class="kv-val" id="enc-name"></span></div>
-        <div class="kv-row"><span class="kv-key">Size</span><span class="kv-val" id="enc-size"></span></div>
-        <div class="kv-row"><span class="kv-key">Key</span><span class="kv-val" id="mk-title"></span></div>
-      </div>
-
-      <p class="caption">Only you will be able to open it — with this Ledger in hand.</p>
-
-      <div class="status-row" id="enc-check">
-        <span class="status-dot"></span>
-        <span class="status-text" id="enc-check-text"></span>
-      </div>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-encrypt">Lock the file</button>
-      <button class="btn quiet" data-action="reset">Cancel</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Decrypt ════════════ -->
-  <section class="screen" id="screen-decrypt">
-    <div class="content">
-      <div class="section-label">Locked file</div>
-      <div class="card">
-        <div class="kv-row"><span class="kv-key">Name</span><span class="kv-val" id="dec-name"></span></div>
-        <div class="kv-row"><span class="kv-key">Size</span><span class="kv-val" id="dec-size"></span></div>
-      </div>
-
-      <p class="caption">The device will ask for a PIN. If you never changed it — 123456.</p>
-
-      <div class="status-row" id="dec-check">
-        <span class="status-dot"></span>
-        <span class="status-text" id="dec-check-text"></span>
-      </div>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-decrypt">Open the file</button>
-      <button class="btn quiet" data-action="reset">Cancel</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Working ════════════ -->
-  <section class="screen" id="screen-busy">
-    <div class="content centered">
-      <div class="pulse">
-        <svg viewBox="0 0 64 74" class="lock-svg working" aria-hidden="true">
-          <path class="shackle" d="M18 30V21a14 14 0 0 1 28 0v9" />
-          <rect class="body" x="6" y="30" width="52" height="40" rx="11" />
-          <circle class="pin" cx="32" cy="47" r="4.2" />
-          <path class="stem" d="M32 51.5v6" />
-        </svg>
-      </div>
-      <div class="hero-text center">
-        <div class="title" id="busy-text"></div>
-        <div class="subtitle" id="busy-tip"></div>
-      </div>
-      <div class="loader"></div>
-    </div>
-  </section>
-
-  <!-- ════════════ Done ════════════ -->
-  <section class="screen" id="screen-done">
-    <div class="content centered">
-      <div class="check">
-        <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-16"/></svg>
-      </div>
-      <div class="hero-text center">
-        <div class="title" id="done-title"></div>
-        <div class="filename" id="done-file"></div>
-        <div class="subtitle" id="done-explain"></div>
-      </div>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" id="btn-reveal">Show in Finder</button>
-      <button class="btn" id="btn-trash">Move the unlocked file to Trash</button>
-      <button class="btn quiet" data-action="reset">Done</button>
-    </div>
-  </section>
-
-  <!-- ════════════ Error ════════════ -->
-  <section class="screen" id="screen-error">
-    <div class="content centered">
-      <div class="check bad">
-        <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M26 15v16"/><path d="M26 36.5v.01"/></svg>
-      </div>
-      <div class="hero-text center">
-        <div class="title" id="err-title">That did not work</div>
-        <div class="subtitle" id="err-text"></div>
-      </div>
-      <p class="caption" id="err-tip" hidden></p>
-    </div>
-
-    <div class="bottom">
-      <button class="btn primary" data-action="reset">OK</button>
-      <button class="btn quiet" id="btn-err-help">Open the setup guide</button>
-    </div>
-  </section>
-
-</main>
-
+  </div>
+</div>
 <script src="renderer.js"></script>
 </body>
 </html>

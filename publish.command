@@ -10,7 +10,7 @@ set -e
 cd "$(dirname "$0")"
 
 REPO="https://github.com/iterator-one/sealbox.git"
-TAG="v1.0.2"
+TAG="v1.1.0"
 
 echo "Sealbox — publishing to GitHub"
 echo "Repository: $REPO"

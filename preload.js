@@ -1,51 +1,49 @@
 'use strict';
+/**
+ * The privilege boundary.
+ *
+ * The interface runs with no access to Node, the filesystem or the network. It
+ * can call exactly the functions listed here and nothing else, so this file is
+ * the complete list of what a compromised renderer could do. Every one of them
+ * returns {ok, value} or {ok: false, error} — no exceptions cross the bridge.
+ */
+
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
-/**
- * This file is the complete privilege boundary.
- *
- * The renderer has no access to Node, the filesystem or the network — only to
- * the functions listed below. Everything here is worth reviewing: if a
- * capability is not in this object, the UI cannot reach it.
- */
-const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
-
 contextBridge.exposeInMainWorld('api', {
-  /** Path of a dropped file: File.path was removed in Electron 32+. */
-  pathForFile(file) {
-    try {
-      if (webUtils && typeof webUtils.getPathForFile === 'function') {
-        return webUtils.getPathForFile(file);
-      }
-    } catch { /* fall through to the legacy property */ }
-    return file.path || null;
+  // Electron 32 removed File.path; this is the supported way to learn where a
+  // dropped file lives. It reads a path, it does not open anything.
+  pathForFile: (file) => {
+    try { return webUtils.getPathForFile(file); } catch { return null; }
   },
 
-  status: () => invoke('env:status'),
-  inspect: (filePath) => invoke('file:inspect', filePath),
+  /* status and files */
+  status: () => ipcRenderer.invoke('env:status'),
+  inspect: (filePath) => ipcRenderer.invoke('file:inspect', filePath),
+  pickFile: (kind) => ipcRenderer.invoke('dialog:open', kind),
 
-  generateKey: (identity) => invoke('card:generate', identity),
-  saveRecovery: (recovery) => invoke('card:saveRecovery', recovery),
-  onKeyProgress: (cb) => {
-    const listener = (_e, line) => cb(line);
-    ipcRenderer.on('card:progress', listener);
-    return () => ipcRenderer.removeListener('card:progress', listener);
-  },
+  /* encrypt and decrypt */
+  encryptTo: (filePath, recipientIds, signerId) =>
+    ipcRenderer.invoke('encrypt:keys', { filePath, recipientIds, signerId }),
+  decrypt: (filePath) => ipcRenderer.invoke('decrypt:card', { filePath }),
 
-  encryptWithKey: (filePath, recipientId, signerId) =>
-    invoke('encrypt:key', { filePath, recipientId, signerId }),
-  decryptWithCard: (filePath) => invoke('decrypt:card', { filePath }),
+  /* public keys */
+  inspectKey: (filePath) => ipcRenderer.invoke('keys:inspect', filePath),
+  addKey: (filePath) => ipcRenderer.invoke('keys:import', filePath),
 
-  setupPrepare: () => invoke('setup:prepare'),
-  setupRetryLink: () => invoke('setup:retryLink'),
-  setupEnableDriver: () => invoke('setup:enableDriver'),
-  onSetupProgress: (cb) => {
-    const listener = (_e, line) => cb(line);
-    ipcRenderer.on('setup:progress', listener);
-    return () => ipcRenderer.removeListener('setup:progress', listener);
-  },
+  /* setting up */
+  generateKey: (name, email) => ipcRenderer.invoke('card:generate', { name, email }),
+  saveRecovery: (recovery) => ipcRenderer.invoke('card:saveRecovery', recovery),
+  setupPrepare: () => ipcRenderer.invoke('setup:prepare'),
+  setupRetryLink: () => ipcRenderer.invoke('setup:retryLink'),
+  setupEnableDriver: () => ipcRenderer.invoke('setup:enableDriver'),
+  onKeyProgress: (fn) => ipcRenderer.on('card:progress', (_e, line) => fn(line)),
+  onSetupProgress: (fn) => ipcRenderer.on('setup:progress', (_e, line) => fn(line)),
 
-  reveal: (filePath) => invoke('shell:reveal', filePath),
-  trash: (filePath) => invoke('shell:trash', filePath),
-  pickFile: () => invoke('dialog:open'),
+  /* small conveniences */
+  reveal: (filePath) => ipcRenderer.invoke('shell:reveal', filePath),
+  trash: (filePath) => ipcRenderer.invoke('shell:trash', filePath),
+  copyText: (text) => ipcRenderer.invoke('clipboard:write', text),
+  windowClose: () => ipcRenderer.invoke('window:close'),
+  windowMinimise: () => ipcRenderer.invoke('window:minimise'),
 });

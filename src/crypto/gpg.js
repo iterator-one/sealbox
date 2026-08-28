@@ -164,6 +164,43 @@ function decodeUid(raw) {
   }
 }
 
+/**
+ * Encrypt for one or more recipients, signing with the on-device key.
+ *
+ * The signature is the one step where the Ledger genuinely participates: it is
+ * computed inside the secure element, the PIN is requested, and with UIF
+ * enabled the physical button must be pressed. Encrypting alone would not need
+ * the device at all, since a public key is enough — so a "confirm on your
+ * device" prompt without the signature would be theatre.
+ *
+ * Deliberately no --batch: otherwise pinentry cannot show the PIN dialog.
+ */
+async function signEncryptToKeys(inputPath, outputPath, recipientIds, signerId) {
+  const bin = await findGpg();
+  if (!bin) throw new Error('GnuPG not found');
+  if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
+    throw new Error('No recipient selected');
+  }
+
+  const args = ['--yes', '--trust-model', 'always'];
+  recipientIds.forEach((id) => args.push('--recipient', id));
+  args.push('--output', outputPath);
+  if (signerId) args.push('--local-user', signerId);
+  args.push(signerId ? '--sign' : '--batch', '--encrypt', inputPath);
+
+  const res = await run(bin, args, { timeout: 300000 });
+  if (!res.ok) {
+    const stderr = res.stderr || '';
+    if (/No secret key|secret key not available|card.*not available/i.test(stderr)) {
+      throw new Error('Device unavailable. Connect the Ledger and open the OpenPGP app');
+    }
+    if (/cancell?ed/i.test(stderr)) throw new Error('Cancelled on the device');
+    if (/Bad PIN|bad passphrase/i.test(stderr)) throw new Error('Wrong PIN');
+    throw new Error(cleanError(stderr) || 'Encryption failed');
+  }
+  return outputPath;
+}
+
 /** Encrypt to a public key. The device is not needed for this. */
 async function encryptToKey(inputPath, outputPath, keyId) {
   const bin = await findGpg();
@@ -256,7 +293,7 @@ function cleanError(stderr) {
 }
 
 module.exports = {
-  findGpg, status, cardStatus, listKeys, encryptToKey, signEncryptToKey, decryptWithCard,
+  findGpg, status, cardStatus, listKeys, encryptToKey, signEncryptToKey, signEncryptToKeys, decryptWithCard,
 };
 
 /** Forget the cached gpg path — it may have appeared after installation. */
