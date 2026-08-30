@@ -8,6 +8,7 @@ const gpg = require('./src/crypto/gpg');
 const card = require('./src/crypto/cardkey');
 const setup = require('./src/setup/bootstrap');
 const keys = require('./src/crypto/keys');
+const { LINKS } = require('./src/links');
 const device = require('./src/device/state');
 const { encryptedPath, decryptedPath } = require('./src/paths');
 
@@ -279,22 +280,12 @@ handle('window:minimise', async () => { if (win) win.minimize(); return true; })
 handle('clipboard:write', async (text) => { clipboard.writeText(String(text)); return true; });
 
 /**
- * Open one of a fixed set of pages in the browser. The renderer passes a name,
- * never a URL, so nothing it could be tricked into saying can turn into an
- * arbitrary link.
+ * Open one of a fixed set of addresses. The renderer passes a name, never a
+ * URL — the addresses themselves live in src/links.js, the only file in the
+ * codebase allowed to contain one.
  */
-const LINKS_OUT = {
-  homebrew: 'https://brew.sh',
-  gnupg: 'https://gnupg.org/download/',
-  // Ledger Live's own URL scheme. These open a screen inside it; they cannot
-  // change a setting or install anything by themselves — the user still does
-  // that, in Ledger Live, where such decisions belong.
-  'ledger-experimental': 'ledgerlive://settings/experimental',
-  'ledger-openpgp': 'ledgerlive://myledger?installApp=OpenPGP',
-  'ledger-live': 'https://www.ledger.com/ledger-live',
-};
 handle('shell:open', async (name) => {
-  const url = LINKS_OUT[name];
+  const url = LINKS[name];
   if (!url) throw new Error('unknown link');
   await shell.openExternal(url);
   return true;

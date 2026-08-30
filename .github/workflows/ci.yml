@@ -41,18 +41,8 @@ jobs:
         run: xvfb-run -a npm run smoke
         timeout-minutes: 5
 
-      - name: Check for network calls in first-party code
-        run: |
-          if grep -rnE "https?://|fetch\(|require\('(net|dns|https?)'\)" src/ main.js preload.js; then
-            echo "Network access found — this breaks the guarantee stated in SECURITY.md"
-            exit 1
-          fi
-          echo "No network calls"
-
-      - name: Check for shell string interpolation
-        run: |
-          if grep -rnE "exec\(|execSync|shell: *true" src/ main.js preload.js; then
-            echo "Shell invocation found — use execFile with an argument array instead"
-            exit 1
-          fi
-          echo "No shell invocations"
+      # The guarantees in SECURITY.md — no network, no shell strings, no address
+      # outside src/links.js — are checked by `npm test` above, where a
+      # violation is caught before a push rather than after one. See
+      # test/guarantees.test.js. The greps that used to live here failed on an
+      # address handed to the browser, which is not a network call.

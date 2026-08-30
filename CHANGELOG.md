@@ -5,6 +5,21 @@
 Everything here removes a step from the person using the app. 1.1.0 shipped a rebuilt
 interface; this release makes the setup behind it nearly disappear.
 
+### The guarantees are tests now, not greps
+
+The build failed on its own guard: a grep for `https?://` in first-party code, which the Homebrew
+and Ledger Live addresses tripped. The guard was right to look and wrong about what it found —
+an address handed to `shell.openExternal` is given to the browser, not fetched.
+
+So the promise is stated precisely instead of approximately. Every address lives in `src/links.js`
+and nowhere else, and `test/guarantees.test.js` checks four things on every `npm test`: no
+`fetch`/`XMLHttpRequest`/`net`/`dns`/`http`/`tls` anywhere in first-party code; no address in code
+outside that one file; no shell strings; and that the renderer is still isolated with nothing but
+the preload list. Each guard was verified by introducing the exact violation it names and watching
+the suite go red.
+
+Moving them out of the workflow means a violation is caught before a push instead of after one.
+
 ### Four fewer things to do
 
 - **A `.gpg` file opens Sealbox when double-clicked.** The app registers the file types, so the

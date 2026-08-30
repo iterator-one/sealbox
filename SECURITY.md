@@ -25,7 +25,8 @@ Sealbox implements no cryptography. GnuPG does all of it, and delegates card ope
 | Sealbox never sees your PIN | The PIN is collected by `pinentry`, a separate process started by `gpg-agent`. Sealbox has no channel to it. Where GnuPG could ask us for hidden input we answer with an empty line and let pinentry take over (`src/crypto/cardkey.js`, `GET_HIDDEN` branch). |
 | No plaintext copies are written | Output paths are computed in `src/paths.js`. The only files written are the ciphertext, the decrypted output you asked for, and the recovery card. Nothing goes to a temp directory. |
 | The format is not proprietary | Output is standard OpenPGP (RFC 9580). Check with `gpg --list-packets file.gpg`. If this project disappears, `gpg --decrypt` still opens your files. |
-| No network traffic | The app makes no HTTP requests. The renderer's CSP is `default-src 'none'`. The one exception is the optional GnuPG install step, which runs Homebrew — see [§5](#5-privileged-operations). |
+| No network traffic | The app opens no sockets: `test/guarantees.test.js` fails the build if `fetch`, `XMLHttpRequest`, or the `net`/`dns`/`http`/`https`/`tls` modules appear anywhere in first-party code. The renderer's CSP is `default-src 'none'`. Two things are not the app making a request: `shell.openExternal` hands an address to the browser or to Ledger Live, and the optional GnuPG install step runs Homebrew — see [§5](#5-privileged-operations). |
+| Addresses live in one file | Every address Sealbox can hand to the system is in `src/links.js`, and a test fails if a URL appears in code anywhere else. The interface asks for one by name and cannot supply its own. |
 | No telemetry | No analytics, no crash reporter, no update check. Grep for `http` in `src/` and `main.js`. |
 | A public key is never imported behind your back | A dropped key file is read with `--show-keys`, which parses and imports nothing. The name and fingerprint are shown, and `--import` runs only after you press the button (`src/crypto/keys.js`). A file containing a *private* key is refused. |
 
@@ -221,8 +222,9 @@ gpg --list-packets report.docx.gpg
 #    (a card serial in field 15, secret key shown as a stub)
 gpg --list-secret-keys --with-colons
 
-# 3. No network code
-grep -rn "http\|fetch\|net\.\|dns" src/ main.js preload.js
+# 3. No network code — and every address in one file
+grep -rn "fetch(\|XMLHttpRequest\|require('net'\|require('dns'\|require('https\?')" src/ main.js preload.js
+grep -rn "https\?://" src/ main.js preload.js | grep -v src/links.js
 
 # 4. No shell strings
 grep -rn "exec(\|execSync\|shell: true" src/ main.js
