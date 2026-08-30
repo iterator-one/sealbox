@@ -39,6 +39,14 @@ the app would have rendered unstyled fragments in Electron while looking correct
 
 ### Build
 
+The release workflow was invalid and no release for this version was ever produced: a step's
+`if:` tested `secrets.MACOS_CERTIFICATE`, and the `secrets` context is not available there.
+GitHub rejects the whole file with "Unrecognized named-value: 'secrets'", so no job runs at all
+and the only visible symptom is that the download link keeps serving the previous release. The
+condition is now computed in a step that reads the secret from the environment and writes an
+output. `test/workflows.test.js` fails the build if `secrets` reappears inside an `if:`, if a
+step id is referenced but never declared, or if a secret is interpolated into a shell line.
+
 GitHub Actions dropped the node20 runtime, so every action pinned to a major
 built for it ran with a deprecation warning. All four are now on majors that run on node24:
 `actions/checkout@v7`, `actions/setup-node@v7`, `actions/upload-artifact@v7` and

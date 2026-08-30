@@ -66,9 +66,22 @@ jobs:
       # already been built. Uploading is the job of the step below, which uses
       # the token the workflow already has.
 
-      # Signed and notarised build. Runs only if the secrets below exist, so a
-      # fork without an Apple account still builds. With them macOS opens the
-      # app with no warning at all:
+      # Is a signing certificate configured? The `secrets` context cannot be
+      # used in a step's `if:` — GitHub rejects the whole workflow file with
+      # "Unrecognized named-value: 'secrets'" — so the answer is computed here
+      # and read as a step output below. The secret is passed through the
+      # environment rather than interpolated into the script, so its value never
+      # becomes part of a command line.
+      - name: Is a signing certificate configured?
+        id: cert
+        env:
+          CERT: ${{ secrets.MACOS_CERTIFICATE }}
+        run: |
+          if [ -n "$CERT" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      # Signed and notarised build. Runs only if those secrets exist, so a fork
+      # without an Apple account still builds. With them macOS opens the app
+      # with no warning at all:
       #
       #   MACOS_CERTIFICATE           base64 of a Developer ID Application .p12
       #   MACOS_CERTIFICATE_PASSWORD  password of that .p12
@@ -79,7 +92,7 @@ jobs:
       # Notarisation uploads the build to Apple and waits for their scan,
       # which usually takes a few minutes.
       - name: Build the universal .dmg (signed and notarised)
-        if: ${{ secrets.MACOS_CERTIFICATE != '' }}
+        if: steps.cert.outputs.present == 'true'
         run: >
           npx electron-builder --mac --universal --publish never
           -c.mac.hardenedRuntime=true
@@ -92,7 +105,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Build the universal .dmg (unsigned)
-        if: ${{ secrets.MACOS_CERTIFICATE == '' }}
+        if: steps.cert.outputs.present != 'true'
         run: npm run dist
         env:
           # No Developer ID certificate, so the build is unsigned and macOS
