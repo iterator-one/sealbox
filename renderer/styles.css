@@ -441,3 +441,7 @@ body {
   user-select: text; cursor: text;
   word-break: break-all;
 }
+
+/* An inline "open" shortcut sitting inside a step line. */
+.linkbtn.small { font-size: 14px; height: 23px; gap: 4px; }
+.linkbtn.small .icon { width: 16px; height: 16px; }

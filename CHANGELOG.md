@@ -53,6 +53,26 @@ built for it ran with a deprecation warning. All four are now on majors that run
 `softprops/action-gh-release@v3`. Their inputs are unchanged, so the workflows are otherwise
 the same.
 
+### GnuPG travels with the app
+
+Releases now carry GnuPG inside the `.app`, so a new Mac needs nothing installed and the setup's
+first step completes by itself. `tools/vendor-gpg.sh` copies gpg, gpg-agent, scdaemon and
+pinentry with their libraries, rewrites their load paths, and — this is the part that was missing
+before — signs each one ad-hoc, without which Apple Silicon refuses to execute a rewritten
+binary. `gpg-agent.conf` is pointed at the bundled `scdaemon` and `gpg.conf` at the bundled
+agent, because the copied binaries were built for paths that do not exist on the user's Mac.
+CI verifies the bundled gpg runs and is signed before the image is built.
+
+The bundle holds one architecture, the runner's. On a Mac of the other one the copy fails its
+version probe and Sealbox falls back to a system GnuPG — checked at runtime, never assumed.
+
+### Two clicks instead of a menu safari
+
+Ledger Live registers `ledgerlive://` links, so the OpenPGP step now has a button that opens My
+Ledger with OpenPGP already searched for, and the Developer-mode line has one that opens the
+experimental settings directly. The links open a screen; they cannot flip a switch or install
+anything, which is where that decision belongs.
+
 ### A third dead end: a Mac with no package manager
 
 Setup ended at "Couldn't prepare your Mac — Something went wrong during setup" on any Mac without

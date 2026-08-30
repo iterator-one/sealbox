@@ -78,10 +78,12 @@ The app opens on the drop screen. The setup guide appears only when something is
 after a drop that cannot proceed, or when you click the status row at the bottom of the window.
 Seven steps, no terminal:
 
-1. **GnuPG.** One button, if Homebrew is present: Sealbox installs GnuPG through it and writes
-   the reader configuration. On a Mac with no package manager it shows the one command to paste
-   into Terminal, with a copy button — it will not run an installer of its own.
-2. **The OpenPGP app on the Ledger.** Ledger Live → Developer mode → My Ledger → OpenPGP.
+1. **GnuPG** — nothing to do. It ships inside the app, so this step completes by itself and
+   Sealbox only writes the reader configuration. (If the bundled copy cannot run — an Intel Mac
+   opening an Apple Silicon build — it falls back to a system GnuPG, and failing that shows the
+   one command to paste into Terminal, with a copy button. It never runs an installer of its own.)
+2. **The OpenPGP app on the Ledger.** Ledger Live → Developer mode → My Ledger → OpenPGP. Two
+   buttons open Ledger Live straight at those screens; the switches stay yours to flip.
    Devices: Nano X, Nano S Plus, Stax, Flex, Apex P.
 3. **Seed mode on.** Without it the key cannot be recreated after an update.
 4. **Connection check.** The indicator turns green by itself. The row tells you which of the

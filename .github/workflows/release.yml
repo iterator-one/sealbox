@@ -44,21 +44,24 @@ jobs:
       - run: npm run smoke
         timeout-minutes: 5
 
-      # Releases deliberately ship WITHOUT a bundled GnuPG:
+      # Bundle GnuPG into the app. Without this the user has to install it
+      # themselves, and on a Mac without Homebrew that means pasting a command
+      # into Terminal — which defeats the point of the app.
       #
-      #   * tools/vendor-gpg.sh rewrites load paths inside the copied binaries,
-      #     which invalidates their signatures — on Apple Silicon an unsigned
-      #     binary will not run at all;
-      #   * Homebrew's GnuPG is built for one architecture, so it would not
-      #     match a universal app;
-      #   * bundling GnuPG brings GPLv3 obligations (LICENSES-THIRD-PARTY.md).
+      # The script signs the binaries ad-hoc after rewriting their load paths,
+      # or Apple Silicon would refuse to run them. It bundles the runner's
+      # architecture only; on a Mac of the other architecture the copy fails its
+      # version probe and Sealbox falls back to a system GnuPG.
       #
-      # The app installs GnuPG itself on the first setup screen instead.
-      # To bundle it anyway, uncomment the step below and test the result on
-      # both architectures.
-      #
-      # - name: Vendor GnuPG into the app
-      #   run: npm run vendor
+      # Bundling GnuPG brings GPLv3 obligations — see LICENSES-THIRD-PARTY.md.
+      - name: Vendor GnuPG into the app
+        run: npm run vendor
+
+      - name: Confirm the bundled GnuPG is signed and runs
+        run: |
+          vendor/gnupg/bin/gpg --version | head -1
+          codesign --verify --verbose=1 vendor/gnupg/bin/gpg
+          test -x vendor/gnupg/bin/scdaemon || (echo "scdaemon is missing — the card would be invisible" && exit 1)
 
       # `npm run dist` passes --publish never. Without it electron-builder sees
       # that the build was started from a tag, decides to upload the image to

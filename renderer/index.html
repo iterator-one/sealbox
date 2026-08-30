@@ -298,13 +298,20 @@
         <div class="steps">
           <div class="step"><span class="num">1</span><span class="body">Open <span class="tag">Ledger Live</span></span></div>
           <div class="step"><span class="num">2</span><span class="body">Open Settings → <span class="tag">Experimental features</span></span></div>
-          <div class="step"><span class="num">3</span><span class="body">Turn on <span class="tag">Developer mode</span></span></div>
+          <div class="step"><span class="num">3</span><span class="body">Turn on <span class="tag">Developer mode</span>
+            <button class="linkbtn small" id="s-openpgp-settings"><svg class="icon ink-accent"><use href="#i-external"/></svg>open</button></span></div>
           <div class="step"><span class="num">4</span><span class="body">Open <span class="tag">My Ledger</span></span></div>
           <div class="step"><span class="num">5</span><span class="body">Find <span class="tag">OpenPGP</span> and install it</span></div>
         </div>
         <p class="note">If you see two OpenPGP apps, choose the one without “XL”.</p>
       </div>
-      <button class="btn primary" id="s-openpgp-next">OpenPGP installed</button>
+      <div class="footer">
+        <button class="btn primary" id="s-openpgp-open">Open Ledger Live here</button>
+        <button class="linkbtn" id="s-openpgp-next">
+          <svg class="icon ink-accent"><use href="#i-check"/></svg>
+          OpenPGP is installed
+        </button>
+      </div>
     </section>
 
     <!-- ============ Setup 4 — Seed mode ============ -->

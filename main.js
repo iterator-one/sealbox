@@ -248,6 +248,12 @@ handle('clipboard:write', async (text) => { clipboard.writeText(String(text)); r
 const LINKS_OUT = {
   homebrew: 'https://brew.sh',
   gnupg: 'https://gnupg.org/download/',
+  // Ledger Live's own URL scheme. These open a screen inside it; they cannot
+  // change a setting or install anything by themselves — the user still does
+  // that, in Ledger Live, where such decisions belong.
+  'ledger-experimental': 'ledgerlive://settings/experimental',
+  'ledger-openpgp': 'ledgerlive://myledger?installApp=OpenPGP',
+  'ledger-live': 'https://www.ledger.com/ledger-live',
 };
 handle('shell:open', async (name) => {
   const url = LINKS_OUT[name];

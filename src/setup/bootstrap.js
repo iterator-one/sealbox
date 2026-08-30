@@ -161,13 +161,38 @@ async function writeConfig(link, resourcesPath) {
   // PIN dialog: without this gpg would try to ask for the PIN on a console,
   // which a GUI app does not have, and the operation would fail silently
   const pinentry = await findPinentry(resourcesPath);
-  if (pinentry) {
-    const agent = path.join(GNUPGHOME, 'gpg-agent.conf');
-    await backupOnce(agent);
-    await fs.writeFile(agent, `pinentry-program ${pinentry}\n`, 'utf8');
+  const agentLines = [];
+  if (pinentry) agentLines.push(`pinentry-program ${pinentry}`);
+
+  // When GnuPG travels inside the app, gpg-agent has to be told where its
+  // scdaemon is: the bundled binaries were built for /opt/homebrew and that
+  // path does not exist on the user's Mac. Without this the card is invisible
+  // even though everything else works.
+  const bundled = bundledGpg(resourcesPath);
+  const usingBundled = bundled && (await run(bundled, ['--version'], 5000)).ok;
+  if (usingBundled) {
+    const scdaemon = path.join(path.dirname(bundled), 'scdaemon');
+    if (await exists(scdaemon)) agentLines.push(`scdaemon-program ${scdaemon}`);
+
+    const agentBinary = path.join(path.dirname(bundled), 'gpg-agent');
+    if (await exists(agentBinary)) {
+      const gpgConf = path.join(GNUPGHOME, 'gpg.conf');
+      await backupOnce(gpgConf);
+      await fs.writeFile(gpgConf, `agent-program ${agentBinary}\n`, 'utf8');
+    }
   }
 
-  return { link, pinentry };
+  if (agentLines.length) {
+    const agent = path.join(GNUPGHOME, 'gpg-agent.conf');
+    await backupOnce(agent);
+    await fs.writeFile(agent, `${agentLines.join('\n')}\n`, 'utf8');
+  }
+
+  return { link, pinentry, bundled: Boolean(usingBundled) };
+}
+
+async function exists(file) {
+  try { await fs.access(file); return true; } catch { return false; }
 }
 
 async function backupOnce(file) {

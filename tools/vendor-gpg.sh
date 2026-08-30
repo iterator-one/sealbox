@@ -1,21 +1,28 @@
 #!/bin/bash
 #
-# Vendors GnuPG into the application so the user has nothing to install.
-# Run on macOS before `npm run dist`.
+# Vendors GnuPG into the application, so the user never installs anything.
+# Run on macOS before `npm run dist`:
 #
 #   ./tools/vendor-gpg.sh
 #
 # What it does: copies gpg, scdaemon, gpg-agent and pinentry-mac together with
-# their libraries into vendor/gnupg, then rewrites the load paths inside the
-# binaries so they look for libraries next to themselves instead of in
-# /opt/homebrew.
+# the libraries they need into vendor/gnupg, rewrites the load paths inside the
+# binaries so they look next to themselves instead of in /opt/homebrew, and then
+# signs every one of them ad-hoc.
 #
-# WARNING: GnuPG is distributed under GPLv3. Bundling it obliges you to ship
-#          the licence text and an offer of source code with your build.
-#          See LICENSES-THIRD-PARTY.md.
+# That last step is not optional. Rewriting a Mach-O invalidates its signature,
+# and Apple Silicon refuses to execute an arm64 binary with a broken one — the
+# app would ship with a GnuPG that cannot start. `codesign --sign -` needs no
+# certificate and no Apple account.
 #
-# Skipping this script is fine: the app then installs GnuPG itself through
-# Homebrew on the first setup screen.
+# ARCHITECTURE: the binaries are whatever Homebrew installed on this machine,
+# i.e. one architecture. The app itself is universal, so on a Mac of the other
+# architecture the bundled copy simply fails its version probe and Sealbox falls
+# back to a system GnuPG, or to the manual-install screen. That is checked at
+# runtime, not assumed — see findGpg() in src/crypto/gpg.js.
+#
+# LICENCE: GnuPG is GPLv3. Bundling it obliges you to ship the licence text and
+# an offer of source. See LICENSES-THIRD-PARTY.md.
 
 set -euo pipefail
 
@@ -28,15 +35,16 @@ brew list pinentry-mac >/dev/null 2>&1 || brew install pinentry-mac
 
 echo "-> Preparing $DEST"
 rm -rf "$DEST"
-mkdir -p "$DEST/bin" "$DEST/lib" "$DEST/libexec"
+mkdir -p "$DEST/bin" "$DEST/lib"
+printf 'Filled by tools/vendor-gpg.sh on macOS.\n' > "$DEST/.keep"
 
-# gpg-agent and scdaemon live in libexec; without them the smartcard will not work
+# gpg-agent and scdaemon live in libexec; without them the smartcard is invisible
 for tool in gpg gpgconf gpg-connect-agent pinentry-mac; do
   cp "$BREW_PREFIX/bin/$tool" "$DEST/bin/" 2>/dev/null || echo "  skipped $tool"
 done
 for tool in gpg-agent scdaemon; do
   src="$(find "$BREW_PREFIX" -name "$tool" -type f -perm +111 2>/dev/null | head -1)"
-  [ -n "$src" ] && cp "$src" "$DEST/bin/" || echo "  not found: $tool"
+  if [ -n "$src" ]; then cp "$src" "$DEST/bin/"; else echo "  not found: $tool"; fi
 done
 
 echo "-> Collecting dependencies"
@@ -82,11 +90,20 @@ for lib in "$DEST"/lib/*; do
   done < <(collect_libs "$lib")
 done
 
-echo "-> Checking that the vendored gpg runs"
+# Libraries first: a binary's signature covers the libraries it links, so signing
+# it before they are final would invalidate it again.
+echo "-> Signing (ad-hoc — no certificate needed)"
+for file in "$DEST"/lib/* "$DEST"/bin/*; do
+  [ -f "$file" ] || continue
+  codesign --force --sign - --timestamp=none "$file" >/dev/null 2>&1 \
+    || echo "  could not sign $(basename "$file")"
+done
+
+echo "-> Checking the result"
 "$DEST/bin/gpg" --version | head -2
+codesign --verify --verbose=1 "$DEST/bin/gpg" 2>&1 | head -2 || true
+echo "   architecture: $(lipo -archs "$DEST/bin/gpg" 2>/dev/null || file -b "$DEST/bin/gpg")"
 
 echo
-echo "Done. Add to package.json -> build:"
-echo '  "extraResources": [{ "from": "vendor/gnupg", "to": "gnupg" }]'
-echo
-echo "And do not forget GPLv3: ship the licence text and a source offer."
+echo "Done. vendor/gnupg is ready; `npm run dist` will place it inside the app."
+echo "Remember GPLv3: ship the licence text and an offer of source."

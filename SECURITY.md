@@ -121,11 +121,13 @@ downloads and runs a binary on its own.
 
 ### Opening a link or Terminal
 
-The setup screen can open `brew.sh` in the browser and bring up Terminal. The interface passes a
-*name*, not a URL: `main.js` maps `homebrew` and `gnupg` to two hard-coded addresses and refuses
-anything else, so no string the renderer could be fed turns into an arbitrary link. Terminal is
-opened with `open -a Terminal` and nothing is typed into it — the install command is placed on
-the clipboard for the user to paste, read and run themselves.
+The setup screens can open a page in the browser, a screen inside Ledger Live, or Terminal. The
+interface passes a *name*, not a URL: `main.js` maps five names to hard-coded addresses and
+refuses anything else, so no string the renderer could be fed turns into an arbitrary link. Two
+of them are Ledger Live's own `ledgerlive://` deep links, which open a screen in that app —
+they cannot change a setting or install anything, so enabling Developer mode and installing the
+OpenPGP app stay decisions the user makes inside Ledger Live. Terminal is opened with
+`open -a Terminal` and nothing is typed into it.
 
 ### Enabling the macOS smartcard driver
 
@@ -199,10 +201,15 @@ Ordered by how much they should worry you.
 4. **Files are read fully into memory** for type detection and encryption. Not suitable for very
    large files yet.
 5. **No independent review.** Nobody outside this repository has read the code.
-6. **The `ioreg` / `pgrep` device heuristics are best-effort.** They make the error messages
+6. **The bundled GnuPG is one architecture.** Releases carry the build the CI runner produced
+   (Apple Silicon). On an Intel Mac the copy fails its version probe and Sealbox falls back to a
+   system GnuPG or to the manual-install screen; it never runs a binary it could not execute.
+7. **The `ioreg` / `pgrep` device heuristics are best-effort.** They make the error messages
    specific, but a state of "disconnected" can also mean "we could not tell". Nothing
    cryptographic depends on them.
-7. **Bundled-GnuPG mode is untested,** so releases do not use it. `tools/vendor-gpg.sh` has not been run end to end, and rewriting load paths inside the copied binaries invalidates their signatures. The app installs GnuPG through Homebrew on the setup screen instead.
+8. **Bundled GnuPG has not been exercised against a real Ledger.** The binaries are copied,
+   relinked, signed ad-hoc and checked to run in CI, and `gpg-agent.conf` is pointed at the
+   bundled `scdaemon`, but nobody has yet decrypted a file with a device using the bundled copy.
 
 ## 10. Checking the claims yourself
 

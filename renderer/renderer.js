@@ -396,6 +396,10 @@ function openSetup(step) {
     case 2:
       setProgress('p-prepare', 1, SETUP_TOTAL);
       show('s-prepare');
+      // GnuPG ships inside the app, so on most Macs there is nothing to do
+      // here. Say that plainly instead of asking for a button press that
+      // performs no work.
+      if (state.env && state.env.gpg) macIsReady();
       break;
     case 3:
       setProgress('p-openpgp', 2, SETUP_TOTAL);
@@ -428,6 +432,18 @@ function openSetup(step) {
     default:
       show('screen-drop');
   }
+}
+
+function macIsReady() {
+  $('s-prepare-title').textContent = 'Your Mac is ready';
+  const sub = $('s-prepare-sub');
+  sub.hidden = false;
+  sub.textContent = 'Everything Sealbox needs is already here.';
+  const button = $('s-prepare-next');
+  button.className = 'btn primary';
+  button.textContent = 'Continue';
+  button.disabled = false;
+  button.onclick = () => openSetup(3);
 }
 
 async function runPrepare() {
@@ -603,6 +619,8 @@ function wire() {
     setTimeout(() => { button.textContent = 'Open Terminal'; }, 4000);
   });
   on('s-failed-details', 'click', () => { $('s-failed-log').hidden = !$('s-failed-log').hidden; });
+  on('s-openpgp-open', 'click', () => bridge.openLink('ledger-openpgp'));
+  on('s-openpgp-settings', 'click', (e) => { e.stopPropagation(); bridge.openLink('ledger-experimental'); });
   on('s-openpgp-back', 'click', () => openSetup(2));
   on('s-openpgp-close', 'click', () => show('screen-drop'));
   on('s-openpgp-next', 'click', () => openSetup(4));

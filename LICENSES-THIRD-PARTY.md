@@ -21,8 +21,8 @@ Sealbox's own code is MIT-licensed. Combining the two is permitted: GnuPG is inv
 separate process, not linked into the application, so this is aggregation of two programs on
 one medium. Each part keeps its own licence.
 
-**None of this applies without `npm run vendor`** — the app then uses a system-installed GnuPG,
-and no GnuPG code ships in the distribution.
+**Releases published from this repository do run `npm run vendor`,** so the obligations above
+apply to them. A build made without it uses a system-installed GnuPG and ships no GnuPG code.
 
 ## openpgp.js
 
