@@ -142,8 +142,8 @@ Or let GitHub build it. Double-click **`publish.command`**, or do it by hand:
 
 ```bash
 git push origin main
-git tag v1.2.1
-git push origin v1.2.1
+git tag v1.2.2
+git push origin v1.2.2
 ```
 
 `.github/workflows/release.yml` then runs the tests on a macOS runner, builds the universal

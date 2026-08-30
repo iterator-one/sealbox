@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.1 — nothing left to install
+## 1.2.2 — nothing left to install
 
 Everything here removes a step from the person using the app. 1.1.0 shipped a rebuilt
 interface; this release makes the setup behind it nearly disappear.
@@ -8,6 +8,22 @@ interface; this release makes the setup behind it nearly disappear.
 (1.2.0 was tagged but never published: the release job finished green while skipping the step
 that creates the release, so the download link kept serving 1.1.0. That cannot happen again —
 see below.)
+
+### The universal image had to be told about the bundled GnuPG
+
+With GnuPG inside the app the release build failed at the last step, after the tests, the smoke
+test and the vendoring had all passed. A universal `.dmg` is two builds merged, and the merger
+refuses a Mach-O file that is byte-identical in both and is not itself a fat binary — it cannot
+tell whether that is deliberate:
+
+    Detected file "Contents/Resources/gnupg/bin/gpg" that's the same in both x64 and arm64
+    builds and not covered by the x64ArchFiles rule
+
+Which it is: the bundled GnuPG is one architecture, copied into both halves. `mac.x64ArchFiles`
+and `mac.singleArchFiles` now say so. A test fails the build if those rules disappear while the
+app still ships GnuPG, and the workflow prints what actually ended up inside the built app —
+the architecture of both the app and the bundled gpg, and its version — so a build that quietly
+lost GnuPG cannot pass unnoticed.
 
 ### A green build now means a published release
 

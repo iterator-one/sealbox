@@ -8,8 +8,8 @@ name: release
 #
 # How to cut a release:
 #
-#   git tag v1.2.1
-#   git push origin v1.2.1
+#   git tag v1.2.2
+#   git push origin v1.2.2
 #
 # A few minutes later the .dmg is attached to the Release page and anyone can
 # download it.
@@ -143,6 +143,20 @@ jobs:
           # No Developer ID certificate, so the build is unsigned and macOS
           # warns on first launch. See INSTALL.md.
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: What ended up inside the app
+        run: |
+          APP="dist/mac-universal/Sealbox.app"
+          test -d "$APP" || APP="$(find dist -maxdepth 2 -name 'Sealbox.app' -print -quit)"
+          echo "app: $APP"
+          lipo -archs "$APP/Contents/MacOS/Sealbox" || true
+          if [ -x "$APP/Contents/Resources/gnupg/bin/gpg" ]; then
+            echo "bundled gpg: $(lipo -archs "$APP/Contents/Resources/gnupg/bin/gpg")"
+            "$APP/Contents/Resources/gnupg/bin/gpg" --version | head -1
+          else
+            echo "no GnuPG inside the app — the setup screen would ask the user to install it"
+            exit 1
+          fi
 
       - name: Checksums
         run: |

@@ -86,3 +86,24 @@ test('the renderer is given no more power than preload.js lists', () => {
   assert.match(read('main.js'), /contextIsolation: true/);
   assert.match(read('main.js'), /nodeIntegration: false/);
 });
+
+test('a universal build knows the bundled GnuPG is single-architecture', () => {
+  // electron-builder builds the two architectures separately and merges them.
+  // The merger refuses any Mach-O file that is byte-identical in both builds
+  // and is not a fat binary, because it cannot tell whether that is deliberate:
+  //
+  //   Detected file "Contents/Resources/gnupg/bin/gpg" that's the same in both
+  //   x64 and arm64 builds and not covered by the x64ArchFiles rule
+  //
+  // The bundled GnuPG is exactly that — one architecture, copied into both — so
+  // the rule has to say so. Without these two globs the release build fails
+  // after everything else has already succeeded.
+  const pkg = require('../package.json');
+  const ships = (pkg.build.extraResources || []).some((r) => String(r.to) === 'gnupg');
+  if (!ships) return;
+  assert.ok(pkg.build.mac.x64ArchFiles, 'extraResources ships gnupg but mac.x64ArchFiles is not set');
+  assert.ok(pkg.build.mac.singleArchFiles, 'extraResources ships gnupg but mac.singleArchFiles is not set');
+  for (const glob of [pkg.build.mac.x64ArchFiles, pkg.build.mac.singleArchFiles]) {
+    assert.match(glob, /gnupg/, `the rule "${glob}" does not mention the bundled folder`);
+  }
+});

@@ -1,7 +1,7 @@
 {
   "name": "sealbox",
   "productName": "Sealbox",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A free Mac app that encrypts any file before you send it. The key lives on a Ledger and cannot be copied off it. Open source.",
   "main": "main.js",
   "license": "MIT",
@@ -46,6 +46,8 @@
     ],
     "mac": {
       "category": "public.app-category.utilities",
+      "singleArchFiles": "**/gnupg/**",
+      "x64ArchFiles": "**/gnupg/**",
       "target": [
         {
           "target": "dmg",

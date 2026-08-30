@@ -3,7 +3,7 @@
 This document is for people who want to know what the program actually does before trusting a
 file to it: reviewers, security engineers, and anyone whose files matter.
 
-**Status: v1.2.1. No independent review.** One important path — key generation on the device —
+**Status: v1.2.2. No independent review.** One important path — key generation on the device —
 has never been run against real hardware by the authors. See [§9](#9-known-gaps).
 
 ---
