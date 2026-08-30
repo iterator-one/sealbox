@@ -31,6 +31,19 @@
       "renderer/**/*"
     ],
     "artifactName": "Sealbox.${ext}",
+    "fileAssociations": [
+      {
+        "ext": ["gpg", "pgp"],
+        "name": "Encrypted file",
+        "description": "File encrypted with OpenPGP",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["asc"],
+        "name": "OpenPGP key or message",
+        "role": "Viewer"
+      }
+    ],
     "mac": {
       "category": "public.app-category.utilities",
       "target": [

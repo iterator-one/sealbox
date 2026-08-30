@@ -53,6 +53,19 @@ built for it ran with a deprecation warning. All four are now on majors that run
 `softprops/action-gh-release@v3`. Their inputs are unchanged, so the workflows are otherwise
 the same.
 
+### Four fewer things to do
+
+- **A `.gpg` file opens Sealbox when double-clicked.** The app registers the file types, so the
+  usual way to read something encrypted no longer starts with opening an app and finding the file
+  — you open the file. A file dropped on the app icon arrives the same way.
+- **One key means no chooser.** With a single key there was still a screen listing it and a button
+  to confirm it. It is skipped; the chooser appears when there is an actual choice.
+- **"Quit it".** When Ledger Live is holding the device the status row now quits it for you, with
+  the same AppleScript quit as its own menu item, instead of only offering to look again.
+- **The OpenPGP step advances by itself.** The moment the device answers as a card, the app is
+  installed and open — no one needs to press a button to say so.
+- The key's name is prefilled from the macOS account, so one of the two fields is already filled.
+
 ### GnuPG travels with the app
 
 Releases now carry GnuPG inside the `.app`, so a new Mac needs nothing installed and the setup's

@@ -212,6 +212,9 @@ async function startEncrypt() {
   }
   state.selected = new Set(state.keys.filter((k) => k.mine).map((k) => k.id));
   if (!state.selected.size) state.selected.add(state.keys[0].id);
+
+  if (!COPY.chooserNeeded(state.keys)) return runEncrypt();
+
   paintKeyList();
   show('screen-keys');
 }
@@ -404,6 +407,9 @@ function openSetup(step) {
     case 3:
       setProgress('p-openpgp', 2, SETUP_TOTAL);
       show('s-openpgp');
+      // The moment the device answers as a card, OpenPGP is installed and open.
+      // Nobody needs to tell us that by pressing a button.
+      watchFor((device) => device === 'ready' || device === 'no-key', () => openSetup(4));
       break;
     case 4:
       setProgress('p-seed', 3, SETUP_TOTAL);
@@ -417,6 +423,9 @@ function openSetup(step) {
     case 6:
       setProgress('p-key', 5, SETUP_TOTAL);
       show('s-key');
+      if (!$('s-key-name').value && state.env && state.env.suggestedName) {
+        $('s-key-name').value = state.env.suggestedName;
+      }
       break;
     case 7:
       setProgress('p-creating', 6, SETUP_TOTAL);
@@ -444,6 +453,18 @@ function macIsReady() {
   button.textContent = 'Continue';
   button.disabled = false;
   button.onclick = () => openSetup(3);
+}
+
+/* Poll the device until `test` passes, then run `then` once. Used by the setup
+   steps that can tell for themselves when they are finished. */
+function watchFor(test, then) {
+  stopWaiting();
+  const from = state.screen;
+  state.waitTimer = setInterval(async () => {
+    const env = await refreshStatus();
+    if (!env || state.screen !== from) return;
+    if (test(env.device)) { stopWaiting(); then(); }
+  }, 1500);
 }
 
 async function runPrepare() {
@@ -541,6 +562,9 @@ async function saveRecovery() {
 /* ---------- events ---------- */
 
 function wire() {
+  // Double-clicked in Finder, or dropped on the app icon.
+  if (bridge.onFileOpened) bridge.onFileOpened((filePath) => { reset(); accept(filePath); });
+
   on('win-close', 'click', () => bridge.windowClose());
   on('win-min', 'click', () => bridge.windowMinimise());
   on('notice-x', 'click', hideNotice);
@@ -596,6 +620,13 @@ function wire() {
     const current = state.env ? state.env.device : null;
     if (current === 'ready') return showKeyDetails();
     if (current === 'no-gpg' || current === 'no-key') return openSetup(1);
+    if (current === 'ledger-live') {
+      paintLedgerBar('checking');
+      await bridge.quitLedgerLive();
+      // Quitting takes a moment; look again once it has.
+      setTimeout(refreshStatus, 1200);
+      return;
+    }
     // "Connect", "Check again", "Try again" all mean the same thing: look again.
     paintLedgerBar('checking');
     await refreshStatus();
@@ -621,9 +652,9 @@ function wire() {
   on('s-failed-details', 'click', () => { $('s-failed-log').hidden = !$('s-failed-log').hidden; });
   on('s-openpgp-open', 'click', () => bridge.openLink('ledger-openpgp'));
   on('s-openpgp-settings', 'click', (e) => { e.stopPropagation(); bridge.openLink('ledger-experimental'); });
-  on('s-openpgp-back', 'click', () => openSetup(2));
-  on('s-openpgp-close', 'click', () => show('screen-drop'));
-  on('s-openpgp-next', 'click', () => openSetup(4));
+  on('s-openpgp-back', 'click', () => { stopWaiting(); openSetup(2); });
+  on('s-openpgp-close', 'click', () => { stopWaiting(); show('screen-drop'); });
+  on('s-openpgp-next', 'click', () => { stopWaiting(); openSetup(4); });
   on('s-seed-back', 'click', () => openSetup(3));
   on('s-seed-close', 'click', () => show('screen-drop'));
   on('s-seed-consent', 'click', () => {
@@ -693,6 +724,7 @@ function demoApi() {
         { id: 'AA11BB22CC33DD44', fingerprint: 'AA11BB22CC33DD44', name: 'Alex Morgan', email: 'alex@example.com', isNew: true },
         { id: 'FF99EE88DD77CC66', fingerprint: 'FF99EE88DD77CC66', name: 'John Smith', email: 'john@example.com' },
       ],
+      suggestedName: 'Boris Zozulya',
       recovery: { timestamp: '19990101T000000!', name: 'Boris', email: 'boris@example.com', keyType: 'ed25519 / rsa2048' },
     }),
     inspect: async () => ok({ name: 'contract.pdf', size: 2516582, encryption: 'unknown', keyIds: [], isDirectory: false }),
@@ -711,6 +743,7 @@ function demoApi() {
     pickFile: async (kind) => ok(kind === 'key' ? '/demo/alex-public.asc' : '/demo/contract.pdf'),
     openLink: async () => ok({}),
     openTerminal: async () => ok({}),
+    quitLedgerLive: async () => ok({}),
     windowClose: () => {},
     windowMinimise: () => {},
   };

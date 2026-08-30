@@ -46,6 +46,8 @@ contextBridge.exposeInMainWorld('api', {
   copyText: (text) => ipcRenderer.invoke('clipboard:write', text),
   openLink: (name) => ipcRenderer.invoke('shell:open', name),
   openTerminal: () => ipcRenderer.invoke('shell:terminal'),
+  quitLedgerLive: () => ipcRenderer.invoke('ledger:quitLive'),
+  onFileOpened: (fn) => ipcRenderer.on('file:opened', (_e, filePath) => fn(filePath)),
   windowClose: () => ipcRenderer.invoke('window:close'),
   windowMinimise: () => ipcRenderer.invoke('window:minimise'),
 });

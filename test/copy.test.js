@@ -60,6 +60,12 @@ test('the progress bar advances by exactly one segment per step and ends full', 
   assert.equal(Math.max(...bars), copy.SETUP_TOTAL);
 });
 
+test('the recipient chooser appears only when there is something to choose', () => {
+  assert.equal(copy.chooserNeeded([]), false);
+  assert.equal(copy.chooserNeeded([{ id: 'a' }]), false, 'a list of one is a screen only to be dismissed');
+  assert.equal(copy.chooserNeeded([{ id: 'a' }, { id: 'b' }]), true);
+});
+
 test('every screen in the markup has a title element, so no screen can render empty', () => {
   const screens = [...html.matchAll(/<section class="screen[^"]*" id="([^"]+)"([\s\S]*?)<\/section>/g)];
   assert.ok(screens.length >= 18, `expected at least 18 screens, found ${screens.length}`);

@@ -45,8 +45,29 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    win.show();
+    if (pendingFile) offerFile(pendingFile);
+  });
 }
+
+// A .gpg file double-clicked in Finder, or dropped on the app icon. macOS
+// delivers it through open-file, which can fire before the window exists, so it
+// is held until the renderer is ready to be told.
+let pendingFile = null;
+function offerFile(filePath) {
+  pendingFile = filePath;
+  if (win && !win.isDestroyed()) {
+    win.webContents.send('file:opened', filePath);
+    win.show();
+    win.focus();
+    pendingFile = null;
+  }
+}
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  offerFile(filePath);
+});
 
 app.whenReady().then(() => {
   createWindow();
@@ -72,6 +93,22 @@ const handle = (channel, fn) =>
       return { ok: false, error: err.message || String(err) };
     }
   });
+
+/**
+ * The account's full name, used to prefill the key's user id. `id -F` is the
+ * macOS way to ask; everywhere else fall back to the login name. Nothing is
+ * sent anywhere — it only saves the user typing their own name.
+ */
+async function fullName() {
+  if (process.platform === 'darwin') {
+    const out = await new Promise((resolve) => {
+      require('child_process').execFile('id', ['-F'], { timeout: 3000 }, (err, stdout) =>
+        resolve(err ? '' : (stdout || '').trim()));
+    });
+    if (out) return out;
+  }
+  try { return require('os').userInfo().username || ''; } catch { return ''; }
+}
 
 /** Environment status plus the user's own on-device key. */
 handle('env:status', async () => {
@@ -116,6 +153,7 @@ handle('env:status', async () => {
     : null;
 
   return {
+    suggestedName: await fullName(),
     gpg: env.gpg,
     version: env.version,
     card: env.card,
@@ -259,6 +297,22 @@ handle('shell:open', async (name) => {
   const url = LINKS_OUT[name];
   if (!url) throw new Error('unknown link');
   await shell.openExternal(url);
+  return true;
+});
+
+/**
+ * Quit Ledger Live. It holds the device open, so nothing else can talk to the
+ * card while it runs. This is the standard AppleScript quit — the same thing
+ * as choosing Quit in its menu, so unsaved work is not discarded behind
+ * anyone's back — and it runs only when the user presses the button.
+ */
+handle('ledger:quitLive', async () => {
+  if (process.platform !== 'darwin') return false;
+  await new Promise((resolve) => {
+    require('child_process').execFile(
+      'osascript', ['-e', 'tell application "Ledger Live" to quit'], { timeout: 15000 }, () => resolve()
+    );
+  });
   return true;
 });
 

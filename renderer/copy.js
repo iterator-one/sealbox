@@ -42,7 +42,7 @@
     icon: 'alert',
     title: 'Quit Ledger Live',
     sub: 'Ledger Live is using your Ledger.',
-    action: 'Check again',
+    action: 'Quit it',
   },
   ready: {
     icon: 'check',
@@ -118,8 +118,17 @@
 
   const SETUP_TOTAL = 7;
 
+  /**
+   * Does the user have a choice to make about recipients? With a single key
+   * there is nothing to choose, and a list of one is a screen that exists only
+   * to be dismissed.
+   */
+  function chooserNeeded(keys) {
+    return Array.isArray(keys) && keys.length > 1;
+  }
+
   // Loaded both as a plain script in the window and as a module in tests.
-  const exported = { DEVICE_ROWS, DEVICE_SCREEN, SETUP_STEPS, SETUP_TOTAL };
+  const exported = { DEVICE_ROWS, DEVICE_SCREEN, SETUP_STEPS, SETUP_TOTAL, chooserNeeded };
   if (typeof window !== 'undefined') window.SEALBOX_COPY = exported;
   if (typeof module !== 'undefined' && module.exports) module.exports = exported;
 }());

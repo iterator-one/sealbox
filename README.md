@@ -23,7 +23,8 @@ signed — [how to open it](INSTALL.md#3-open-it-the-first-time) takes twenty se
 
 ## What it does
 
-Drag a file onto the window and choose who may open it: yourself, or anyone whose public key you
+Double-click an encrypted file and it opens in Sealbox. Or drag a file onto the window and choose
+who may open it: yourself, or anyone whose public key you
 have imported. Sealbox writes an encrypted copy, `report.docx.gpg`, next to the original. To
 read a file encrypted for you, drag the `.gpg` file back in with the device connected.
 
