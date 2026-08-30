@@ -8,8 +8,8 @@ name: release
 #
 # How to cut a release:
 #
-#   git tag v1.2.0
-#   git push origin v1.2.0
+#   git tag v1.2.1
+#   git push origin v1.2.1
 #
 # A few minutes later the .dmg is attached to the Release page and anyone can
 # download it.
@@ -17,7 +17,15 @@ name: release
 on:
   push:
     tags: ['v*']
+  # Manual runs must name the tag to publish. Without this a run started from
+  # the Actions button uses the default branch, has no tag to attach anything
+  # to, and finishes green having published nothing — which is how v1.2.0
+  # appeared to succeed while the download link still served v1.1.0.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and publish, e.g. v1.2.1'
+        required: true
 
 permissions:
   contents: write
@@ -27,7 +35,28 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # Decide, once, what is being released. Everything below uses this, so a
+      # run can never quietly turn into a build that publishes nothing.
+      - name: Which tag is this?
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          if [ -z "$TAG" ] || [ "$TAG" = "$GITHUB_REF" ]; then
+            echo "This workflow publishes a tagged release, and no tag was given."
+            echo "Push a tag (git tag v1.2.1 && git push origin v1.2.1), or start"
+            echo "the workflow by hand and type the tag in the box."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing $TAG"
+
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.release.outputs.tag }}
 
       # Pinned to majors that run on node24 — GitHub deprecated the node20
       # action runtime.
@@ -128,15 +157,18 @@ jobs:
             dist/*.dmg
             dist/SHA256SUMS.txt
 
+      # No `if:` here on purpose. The job already refused to start without a
+      # tag, so reaching this step and skipping it is not a state that should
+      # exist: a green run must mean a published release.
       - name: Attach to the release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ steps.release.outputs.tag }}
           # make_latest keeps
           # /releases/latest/download/Sealbox.dmg pointing at this build —
           # that is the link the README download button uses.
           make_latest: true
-          name: Sealbox ${{ github.ref_name }}
+          name: Sealbox ${{ steps.release.outputs.tag }}
           files: |
             dist/Sealbox.dmg
             dist/SHA256SUMS.txt

@@ -1,9 +1,25 @@
 # Changelog
 
-## 1.2.0 — nothing left to install
+## 1.2.1 — nothing left to install
 
 Everything here removes a step from the person using the app. 1.1.0 shipped a rebuilt
 interface; this release makes the setup behind it nearly disappear.
+
+(1.2.0 was tagged but never published: the release job finished green while skipping the step
+that creates the release, so the download link kept serving 1.1.0. That cannot happen again —
+see below.)
+
+### A green build now means a published release
+
+The release job attached the build only `if: startsWith(github.ref, 'refs/tags/')`. A run started
+any other way skipped that step and still reported success, so "the build passed" and "the
+release exists" were two different things while looking like one.
+
+The job now decides up front what it is releasing and refuses to start without a tag; a manual run
+has to name one. The attach step carries no condition at all, so reaching it means publishing.
+`test/workflows.test.js` fails the build if that condition ever comes back or if the manual
+trigger loses its tag input — verified by putting the condition back and watching the suite go
+red.
 
 ### The guarantees are tests now, not greps
 
