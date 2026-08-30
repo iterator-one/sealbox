@@ -132,7 +132,7 @@ in. Same thing by hand:
 
 ```bash
 npm install
-npm run vendor    # optional: bundles GnuPG into the app, see LICENSES-THIRD-PARTY.md
+npm run vendor    # bundles GnuPG into the app, as releases do (see LICENSES-THIRD-PARTY.md)
 npm run dist
 ```
 
@@ -142,8 +142,8 @@ Or let GitHub build it. Double-click **`publish.command`**, or do it by hand:
 
 ```bash
 git push origin main
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 `.github/workflows/release.yml` then runs the tests on a macOS runner, builds the universal

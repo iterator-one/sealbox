@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.2.0 — nothing left to install
+
+Everything here removes a step from the person using the app. 1.1.0 shipped a rebuilt
+interface; this release makes the setup behind it nearly disappear.
+
+### Four fewer things to do
+
+- **A `.gpg` file opens Sealbox when double-clicked.** The app registers the file types, so the
+  usual way to read something encrypted no longer starts with opening an app and finding the file
+  — you open the file. A file dropped on the app icon arrives the same way.
+- **One key means no chooser.** With a single key there was still a screen listing it and a button
+  to confirm it. It is skipped; the chooser appears when there is an actual choice.
+- **"Quit it".** When Ledger Live is holding the device the status row now quits it for you, with
+  the same AppleScript quit as its own menu item, instead of only offering to look again.
+- **The OpenPGP step advances by itself.** The moment the device answers as a card, the app is
+  installed and open — no one needs to press a button to say so.
+- The key's name is prefilled from the macOS account, so one of the two fields is already filled.
+
+### GnuPG travels with the app
+
+Releases now carry GnuPG inside the `.app`, so a new Mac needs nothing installed and the setup's
+first step completes by itself. `tools/vendor-gpg.sh` copies gpg, gpg-agent, scdaemon and
+pinentry with their libraries, rewrites their load paths, and — this is the part that was missing
+before — signs each one ad-hoc, without which Apple Silicon refuses to execute a rewritten
+binary. `gpg-agent.conf` is pointed at the bundled `scdaemon` and `gpg.conf` at the bundled
+agent, because the copied binaries were built for paths that do not exist on the user's Mac.
+CI verifies the bundled gpg runs and is signed before the image is built.
+
+The bundle holds one architecture, the runner's. On a Mac of the other one the copy fails its
+version probe and Sealbox falls back to a system GnuPG — checked at runtime, never assumed.
+
+### Two clicks instead of a menu safari
+
+Ledger Live registers `ledgerlive://` links, so the OpenPGP step now has a button that opens My
+Ledger with OpenPGP already searched for, and the Developer-mode line has one that opens the
+experimental settings directly. The links open a screen; they cannot flip a switch or install
+anything, which is where that decision belongs.
+
+### A third dead end: a Mac with no package manager
+
+Setup ended at "Couldn't prepare your Mac — Something went wrong during setup" on any Mac without
+Homebrew, with no way forward. That is not a fault, it is a one-line install the user has to run
+themselves, so it now says so: a screen with the official Homebrew command, a copy button, a
+button that copies it and opens Terminal, and a link to brew.sh. The command is shown, not run —
+Sealbox never executes an installer it did not get from a package manager already on the machine.
+
 ## 1.1.0 — the interface from the design file, and keys for other people
 
 ### Encrypting for someone else
@@ -52,47 +98,6 @@ built for it ran with a deprecation warning. All four are now on majors that run
 `actions/checkout@v7`, `actions/setup-node@v7`, `actions/upload-artifact@v7` and
 `softprops/action-gh-release@v3`. Their inputs are unchanged, so the workflows are otherwise
 the same.
-
-### Four fewer things to do
-
-- **A `.gpg` file opens Sealbox when double-clicked.** The app registers the file types, so the
-  usual way to read something encrypted no longer starts with opening an app and finding the file
-  — you open the file. A file dropped on the app icon arrives the same way.
-- **One key means no chooser.** With a single key there was still a screen listing it and a button
-  to confirm it. It is skipped; the chooser appears when there is an actual choice.
-- **"Quit it".** When Ledger Live is holding the device the status row now quits it for you, with
-  the same AppleScript quit as its own menu item, instead of only offering to look again.
-- **The OpenPGP step advances by itself.** The moment the device answers as a card, the app is
-  installed and open — no one needs to press a button to say so.
-- The key's name is prefilled from the macOS account, so one of the two fields is already filled.
-
-### GnuPG travels with the app
-
-Releases now carry GnuPG inside the `.app`, so a new Mac needs nothing installed and the setup's
-first step completes by itself. `tools/vendor-gpg.sh` copies gpg, gpg-agent, scdaemon and
-pinentry with their libraries, rewrites their load paths, and — this is the part that was missing
-before — signs each one ad-hoc, without which Apple Silicon refuses to execute a rewritten
-binary. `gpg-agent.conf` is pointed at the bundled `scdaemon` and `gpg.conf` at the bundled
-agent, because the copied binaries were built for paths that do not exist on the user's Mac.
-CI verifies the bundled gpg runs and is signed before the image is built.
-
-The bundle holds one architecture, the runner's. On a Mac of the other one the copy fails its
-version probe and Sealbox falls back to a system GnuPG — checked at runtime, never assumed.
-
-### Two clicks instead of a menu safari
-
-Ledger Live registers `ledgerlive://` links, so the OpenPGP step now has a button that opens My
-Ledger with OpenPGP already searched for, and the Developer-mode line has one that opens the
-experimental settings directly. The links open a screen; they cannot flip a switch or install
-anything, which is where that decision belongs.
-
-### A third dead end: a Mac with no package manager
-
-Setup ended at "Couldn't prepare your Mac — Something went wrong during setup" on any Mac without
-Homebrew, with no way forward. That is not a fault, it is a one-line install the user has to run
-themselves, so it now says so: a screen with the official Homebrew command, a copy button, a
-button that copies it and opens Terminal, and a link to brew.sh. The command is shown, not run —
-Sealbox never executes an installer it did not get from a package manager already on the machine.
 
 ### Two dead ends closed
 

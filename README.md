@@ -15,7 +15,7 @@ signed — [how to open it](INSTALL.md#3-open-it-the-first-time) takes twenty se
 
 [Install](INSTALL.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)
 
-> **v1.1.0.** Nobody outside this repository has reviewed the code, and key generation on the
+> **v1.2.0.** Nobody outside this repository has reviewed the code, and key generation on the
 > device has not been tested on real hardware. Keep a second copy of anything you cannot afford
 > to lose. Full list: [Known gaps](SECURITY.md#9-known-gaps).
 
@@ -133,7 +133,7 @@ npm install
 npm start          # run the app
 npm test           # tests
 npm run preview    # rebuild preview.html — the real UI in a browser, with mock data
-npm run vendor     # bundle GnuPG into the app (macOS only, see LICENSES-THIRD-PARTY.md)
+npm run vendor     # bundle GnuPG into the app, as releases do (macOS only)
 npm run dist       # build a universal .dmg (macOS only)
 ```
 
