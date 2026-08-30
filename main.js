@@ -192,9 +192,9 @@ handle('setup:prepare', async () => {
     });
   } catch (err) {
     if (err.code === 'NEEDS_MANUAL_INSTALL') {
-      const e = new Error('No way to install GnuPG automatically was found.');
-      e.manual = true;
-      throw e;
+      // Not a failure to report as a fault: the Mac simply has no package
+      // manager Sealbox could drive. The renderer shows the manual route.
+      throw new Error('NEEDS_MANUAL_INSTALL');
     }
     throw err;
   }
@@ -239,6 +239,31 @@ handle('keys:import', async (filePath) => {
 handle('window:close', async () => { if (win) win.close(); return true; });
 handle('window:minimise', async () => { if (win) win.minimize(); return true; });
 handle('clipboard:write', async (text) => { clipboard.writeText(String(text)); return true; });
+
+/**
+ * Open one of a fixed set of pages in the browser. The renderer passes a name,
+ * never a URL, so nothing it could be tricked into saying can turn into an
+ * arbitrary link.
+ */
+const LINKS_OUT = {
+  homebrew: 'https://brew.sh',
+  gnupg: 'https://gnupg.org/download/',
+};
+handle('shell:open', async (name) => {
+  const url = LINKS_OUT[name];
+  if (!url) throw new Error('unknown link');
+  await shell.openExternal(url);
+  return true;
+});
+
+/** Bring up Terminal so the install command can be pasted into it. */
+handle('shell:terminal', async () => {
+  if (process.platform !== 'darwin') return false;
+  await new Promise((resolve, reject) => {
+    require('child_process').execFile('open', ['-a', 'Terminal'], (err) => (err ? reject(err) : resolve()));
+  });
+  return true;
+});
 
 handle('shell:reveal', async (filePath) => { shell.showItemInFolder(filePath); return true; });
 handle('shell:trash', async (filePath) => { await shell.trashItem(filePath); return true; });

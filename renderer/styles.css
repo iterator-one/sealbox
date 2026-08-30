@@ -432,3 +432,12 @@ body {
 .nav-float.tr-24 { right: 0; top: 24px; }
 .nav-float.tl-29 { left: 0; top: 29px; }
 .btn-float { position: absolute; left: 117px; bottom: 0; }
+
+/* A command the user is expected to copy: monospaced, and allowed to be
+   selected with the mouse even though the rest of the window is not. */
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; line-height: 19px;
+  user-select: text; cursor: text;
+  word-break: break-all;
+}

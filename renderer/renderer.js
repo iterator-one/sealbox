@@ -441,9 +441,19 @@ async function runPrepare() {
 
   const res = await bridge.setupPrepare();
   button.disabled = false;
+  button.className = 'btn primary';
+  button.textContent = 'Prepare Mac';
   if (!res.ok) {
+    // A Mac with no package manager is not a fault to apologise for — it is a
+    // one-line install the user has to run themselves, so say exactly that
+    // instead of showing a failure screen with nothing behind it.
+    if (res.error === 'NEEDS_MANUAL_INSTALL') {
+      setProgress('p-manual', 1, SETUP_TOTAL);
+      return show('s-manual');
+    }
     $('s-failed-sub').textContent = 'Something went wrong during setup.';
     $('s-failed-log').textContent = res.error || '';
+    $('s-failed-log').hidden = true;
     return show('s-prepare-failed');
   }
   $('s-prepare-title').textContent = 'Mac is ready';
@@ -581,6 +591,17 @@ function wire() {
   on('s-prepare-next', 'click', runPrepare);
   on('s-prepare-close', 'click', () => show('screen-drop'));
   on('s-failed-retry', 'click', () => openSetup(2));
+  on('s-manual-close', 'click', () => show('screen-drop'));
+  on('s-manual-copy', 'click', () => bridge.copyText($('s-manual-cmd').textContent.trim()));
+  on('s-manual-site', 'click', () => bridge.openLink('homebrew'));
+  on('s-manual-terminal', 'click', async () => {
+    // Copy first, then bring Terminal up: the user only has to paste.
+    await bridge.copyText($('s-manual-cmd').textContent.trim());
+    const res = await bridge.openTerminal();
+    const button = $('s-manual-terminal');
+    button.textContent = res && res.ok ? 'Copied — paste it in Terminal' : 'Copied to the clipboard';
+    setTimeout(() => { button.textContent = 'Open Terminal'; }, 4000);
+  });
   on('s-failed-details', 'click', () => { $('s-failed-log').hidden = !$('s-failed-log').hidden; });
   on('s-openpgp-back', 'click', () => openSetup(2));
   on('s-openpgp-close', 'click', () => show('screen-drop'));
@@ -670,6 +691,8 @@ function demoApi() {
     // In the preview, picking a file always "works" so a reviewer can walk the
     // whole flow with the mouse.
     pickFile: async (kind) => ok(kind === 'key' ? '/demo/alex-public.asc' : '/demo/contract.pdf'),
+    openLink: async () => ok({}),
+    openTerminal: async () => ok({}),
     windowClose: () => {},
     windowMinimise: () => {},
   };

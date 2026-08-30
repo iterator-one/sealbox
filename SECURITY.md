@@ -119,6 +119,14 @@ with `HOMEBREW_NO_AUTO_UPDATE=1`. This runs third-party code with your privilege
 streamed into the interface. If Homebrew is missing, Sealbox does nothing and says so; it never
 downloads and runs a binary on its own.
 
+### Opening a link or Terminal
+
+The setup screen can open `brew.sh` in the browser and bring up Terminal. The interface passes a
+*name*, not a URL: `main.js` maps `homebrew` and `gnupg` to two hard-coded addresses and refuses
+anything else, so no string the renderer could be fed turns into an arbitrary link. Terminal is
+opened with `open -a Terminal` and nothing is typed into it — the install command is placed on
+the clipboard for the user to paste, read and run themselves.
+
 ### Enabling the macOS smartcard driver
 
 If the device cannot be reached by either communication method, you can press a button that runs,

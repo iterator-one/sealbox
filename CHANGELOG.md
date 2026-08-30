@@ -53,6 +53,14 @@ built for it ran with a deprecation warning. All four are now on majors that run
 `softprops/action-gh-release@v3`. Their inputs are unchanged, so the workflows are otherwise
 the same.
 
+### A third dead end: a Mac with no package manager
+
+Setup ended at "Couldn't prepare your Mac — Something went wrong during setup" on any Mac without
+Homebrew, with no way forward. That is not a fault, it is a one-line install the user has to run
+themselves, so it now says so: a screen with the official Homebrew command, a copy button, a
+button that copies it and opens Terminal, and a link to brew.sh. The command is shown, not run —
+Sealbox never executes an installer it did not get from a package manager already on the machine.
+
 ### Two dead ends closed
 
 - **Details** on the status row used to open an empty recovery card, because the values only

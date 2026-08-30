@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld('api', {
   reveal: (filePath) => ipcRenderer.invoke('shell:reveal', filePath),
   trash: (filePath) => ipcRenderer.invoke('shell:trash', filePath),
   copyText: (text) => ipcRenderer.invoke('clipboard:write', text),
+  openLink: (name) => ipcRenderer.invoke('shell:open', name),
+  openTerminal: () => ipcRenderer.invoke('shell:terminal'),
   windowClose: () => ipcRenderer.invoke('window:close'),
   windowMinimise: () => ipcRenderer.invoke('window:minimise'),
 });

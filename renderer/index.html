@@ -43,6 +43,9 @@
     <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2h12M6 22h12M8 2v4.2c0 .5.2 1 .6 1.4L12 11l3.4-3.4c.4-.4.6-.9.6-1.4V2M8 22v-4.2c0-.5.2-1 .6-1.4L12 13l3.4 3.4c.4.4.6.9.6 1.4V22"/>
     </symbol>
+    <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3h7m0 0v7m0-7L10 14M19 14v4.2c0 1.1 0 1.7-.2 2.1a2 2 0 0 1-.9.9c-.4.2-1 .2-2.1.2H7.8c-1.1 0-1.7 0-2.1-.2a2 2 0 0 1-.9-.9c-.2-.4-.2-1-.2-2.1V8.8c0-1.1 0-1.7.2-2.1a2 2 0 0 1 .9-.9c.4-.2 1-.2 2.1-.2H10"/>
+    </symbol>
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M8 8V5.2c0-1.1 0-1.7.2-2.1a2 2 0 0 1 .9-.9c.4-.2 1-.2 2.1-.2h7.6c1.1 0 1.7 0 2.1.2a2 2 0 0 1 .9.9c.2.4.2 1 .2 2.1v7.6c0 1.1 0 1.7-.2 2.1a2 2 0 0 1-.9.9c-.4.2-1 .2-2.1.2H16"/>
       <path d="M5.2 8h7.6c1.1 0 1.7 0 2.1.2a2 2 0 0 1 .9.9c.2.4.2 1 .2 2.1v7.6c0 1.1 0 1.7-.2 2.1a2 2 0 0 1-.9.9c-.4.2-1 .2-2.1.2H5.2c-1.1 0-1.7 0-2.1-.2a2 2 0 0 1-.9-.9c-.2-.4-.2-1-.2-2.1v-7.6c0-1.1 0-1.7.2-2.1a2 2 0 0 1 .9-.9c.4-.2 1-.2 2.1-.2Z"/>
@@ -246,6 +249,41 @@
         <button class="btn secondary raised" id="s-failed-details">Show details</button>
       </div>
       <pre class="log" id="s-failed-log" hidden></pre>
+    </section>
+
+    <!-- ============ Setup 2 — nothing here can install GnuPG ============ -->
+    <section class="screen shell-split" id="s-manual">
+      <div class="setup-body gap-32">
+        <div class="progress" id="p-manual"></div>
+        <div class="heading">
+          <h1 class="title">One thing to install by hand</h1>
+          <p class="subtitle">Sealbox needs GnuPG, and this Mac has no package manager it can use.
+            Copy the line below, paste it into Terminal and press Enter. It installs Homebrew,
+            which then installs GnuPG.</p>
+          <svg class="nav close" id="s-manual-close"><use href="#i-x"/></svg>
+        </div>
+        <div class="card">
+          <button class="copy" id="s-manual-copy" title="Copy"><svg width="24" height="24"><use href="#i-copy"/></svg></button>
+          <div class="field">
+            <div class="k">Paste this into Terminal</div>
+            <div class="v mono" id="s-manual-cmd">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</div>
+          </div>
+        </div>
+        <div class="inforow">
+          <div class="chip"><svg class="icon"><use href="#i-alert"/></svg></div>
+          <div class="text">
+            <div class="k">This command is not ours</div>
+            <div class="s">It is the official Homebrew installer, from brew.sh. Sealbox never runs it for you.</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn primary" id="s-manual-terminal">Open Terminal</button>
+        <button class="linkbtn" id="s-manual-site">
+          <svg class="icon ink-accent"><use href="#i-external"/></svg>
+          Open brew.sh instead
+        </button>
+      </div>
     </section>
 
     <!-- ============ Setup 3 — install OpenPGP ============ -->
